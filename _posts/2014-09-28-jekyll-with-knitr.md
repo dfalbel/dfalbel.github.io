@@ -114,7 +114,7 @@ par(mar = c(4, 4, .1, .1))
 plot(cars, pch = 19, col = 'red')  # a scatterplot
 {% endhighlight %}
 
-![A scatterplot of the cars data](figure/source/2014-09-28-jekyll-with-knitr/cars-1.png) 
+![A scatterplot of the cars data](https://dl.dropboxusercontent.com/u/40339739/jekyll/2014-09-28-jekyll-with-knitr/cars-1.png) 
 
 ## The build script
 

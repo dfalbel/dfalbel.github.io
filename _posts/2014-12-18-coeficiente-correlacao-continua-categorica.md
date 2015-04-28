@@ -66,7 +66,7 @@ qplot(x = seq(0,1,by = 0.01), y = d, geom = "point") +
   coord_fixed()
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-2](figure/source/2014-12-18-coeficiente-correlacao-continua-categorica/unnamed-chunk-2-1.png) 
+![plot of chunk unnamed-chunk-2](https://dl.dropboxusercontent.com/u/40339739/jekyll/2014-12-18-coeficiente-correlacao-continua-categorica/unnamed-chunk-2-1.png) 
 
 Também é importante gerar variáveis correlacionadas com outras distribuições para verificar se esse comportamento não acontece apenas com a distribuição Normal.
 
@@ -101,7 +101,7 @@ qplot(x = seq(0,1,by = 0.01), y = d, geom = "point") +
   coord_fixed()
 {% endhighlight %}
 
-![plot of chunk grafico2](figure/source/2014-12-18-coeficiente-correlacao-continua-categorica/grafico2-1.png) 
+![plot of chunk grafico2](https://dl.dropboxusercontent.com/u/40339739/jekyll/2014-12-18-coeficiente-correlacao-continua-categorica/grafico2-1.png) 
 
 Veja como este gráfico é muito parecido com o anterior. Usar a raíz do R-quadrado parece ser um índice confiável para ser utilizado como medida de correlação entre variáveis categóricas e contínuas.
 
