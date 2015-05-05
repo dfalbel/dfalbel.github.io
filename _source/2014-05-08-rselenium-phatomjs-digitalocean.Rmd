@@ -37,7 +37,7 @@ Para instalar o phantomjs eu encontrei esse [post](http://withr.me/blog/2014/04/
 
 Então apenas copiei e colei o código no console do meu linux.
 
-```
+```{r, engine='bash', eval=FALSE}
 sudo apt-get remove phantomjs
 sudo unlink /usr/local/bin/phantomjs
 sudo unlink /usr/local/share/phantomjs

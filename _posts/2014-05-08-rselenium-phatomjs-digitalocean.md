@@ -39,7 +39,8 @@ Para instalar o phantomjs eu encontrei esse [post](http://withr.me/blog/2014/04/
 
 Então apenas copiei e colei o código no console do meu linux.
 
-```
+
+{% highlight bash %}
 sudo apt-get remove phantomjs
 sudo unlink /usr/local/bin/phantomjs
 sudo unlink /usr/local/share/phantomjs
@@ -51,7 +52,7 @@ sudo ln -s /usr/local/share/phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/loca
 sudo ln -s /usr/local/share/phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/local/bin/phantomjs
 sudo ln -s /usr/local/share/phantomjs-1.9.0-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 
-```
+{% endhighlight %}
 
 Com isso feito, tudo passou a funcionar:
 
