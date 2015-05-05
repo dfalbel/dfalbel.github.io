@@ -2,7 +2,7 @@
 title: Como faz no R e Estatística
 email: dfalbel@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
-  Blog com dicas e pequenas análises usando R e/ou estatística.
+  Blog com dicas e pequenas análises usando R e/ou estatística. Todo código está disponível no <a href=https://github.com/dfalbel/dfalbel.github.io>github<a>.
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://dfalbel.github.io" # the base hostname & protocol for your site
 twitter_username: dfalbel
