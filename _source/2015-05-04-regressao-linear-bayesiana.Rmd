@@ -82,6 +82,7 @@ Para fazer o MCMC no R, usaremos o pacote `mcmc`. Os seguintes comando serão us
 ```{r}
 library(mcmc)
 param.init <- c(20, -2, 5) # valores iniciais para os parametros
+set.seed(43) 
 out <- metrop(posteriori, param.init, 1e6, x = mtcars$hp, y = mtcars$mpg) # fazer o MCMC
 ```
 
@@ -101,6 +102,7 @@ mod <- lm(mpg ~ hp, data = mtcars)
 c(mod$coef, sd(mod$residuals))
 ```
 
+Em outro post fiz algumas análises mais aprofundadas do resultado. [Veja neste link](http://dfalbel.github.io/2015/05/visualizacao-regressao-linear-bayesiana.html)
 
 ## Referências:
 

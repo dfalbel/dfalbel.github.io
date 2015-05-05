@@ -98,6 +98,7 @@ Para fazer o MCMC no R, usaremos o pacote `mcmc`. Os seguintes comando serão us
 {% highlight r %}
 library(mcmc)
 param.init <- c(20, -2, 5) # valores iniciais para os parametros
+set.seed(43) 
 out <- metrop(posteriori, param.init, 1e6, x = mtcars$hp, y = mtcars$mpg) # fazer o MCMC
 {% endhighlight %}
 
@@ -114,7 +115,7 @@ c(out$final[1:2], exp(out$final[3]))
 
 
 {% highlight text %}
-## [1] 30.59857517 -0.05768259  3.90198832
+## [1] 31.38648924 -0.07583737  3.72903702
 {% endhighlight %}
 
 Veja que eles são bem parecidos com os valores obtidos ajustando um modelo de regressão linear simples frequentista:
@@ -132,6 +133,7 @@ c(mod$coef, sd(mod$residuals))
 ## 30.09886054 -0.06822828  3.80014564
 {% endhighlight %}
 
+Em outro post fiz algumas análises mais aprofundadas do resultado. [Veja neste link](http://dfalbel.github.io/2015/05/visualizacao-regressao-linear-bayesiana.html)
 
 ## Referências:
 
