@@ -1,0 +1,32 @@
+---
+layout: post
+title: Estimando parâmetros de um modelo ARMA(1,1) usando MCMC
+date : 2015-05-05
+tags: [r, estatistica, bayesiana]
+--- 
+
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+**Importante:** Esse post é uma **tentativa** de ajustar um modelo ARMA bayesiano usando o R. Muito provavelmente existe alguma coisa errada aqui **e** com certeza não é um post completo e nem uma boa referência.
+
+Neste post utilizaremos os dados aproximadamente trimestrais da taxa de aprovação do Presidente dos Estados Unidados do primeiro trimestre de 1945 até o último trimestre de 1974. Estes dados estão disponíveis facilmente no `R`, basta digitar `presidents`.
+
+```{r}
+plot(presidents)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
