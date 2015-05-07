@@ -39,5 +39,7 @@ O pacote não está disponível no CRAN, mas pode ser instalado usando o comando
 
 ## Desafio
 
-Para criar o código do pacote precisei estudar bastante a Non Standar Evaluation do R, sem isso não seria possível construí-lo. As funções do ifelser apenas guardam os argumentos passados para elas, quando a regra do ifelse está totalmente escrita, uma função constroi um código utilizando a função nativa do R (`ifelse`) e o avalia no mesmo ambiente correto.
+Para criar o código do pacote precisei estudar bastante a Non Standard Evaluation do R, sem isso não seria possível construí-lo. 
+
+As funções do ifelser apenas guardam os argumentos passados para elas, quando a regra do ifelse está totalmente escrita, uma função constroi o código utilizando a função nativa do R (`ifelse`) e o avalia no ambiente (`environment`) correto.
 
