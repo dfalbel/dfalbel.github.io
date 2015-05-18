@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Visualizando um conjunto de modelos lineares usando o pacote meifly
-date : 2015-05-06
+date : 2015-05-18
 tags: [r, estatistica, bayesiana]
 --- 
 
