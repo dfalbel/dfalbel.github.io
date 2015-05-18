@@ -27,41 +27,84 @@ Nele temos as seguintes variáveis:
 - depth. total depth percentage = z / mean(x, y) = 2 * z / (x + y) (43–79)
 - table. width of top of diamond relative to widest point (43–95)
 
-```{r}
+
+{% highlight r %}
 library(ggplot2)
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Loading required package: methods
+{% endhighlight %}
+
+
+
+{% highlight r %}
 head(diamonds)
-```
+{% endhighlight %}
+
+
+
+{% highlight text %}
+##   carat       cut color clarity depth table price    x    y    z
+## 1  0.23     Ideal     E     SI2  61.5    55   326 3.95 3.98 2.43
+## 2  0.21   Premium     E     SI1  59.8    61   326 3.89 3.84 2.31
+## 3  0.23      Good     E     VS1  56.9    65   327 4.05 4.07 2.31
+## 4  0.29   Premium     I     VS2  62.4    58   334 4.20 4.23 2.63
+## 5  0.31      Good     J     SI2  63.3    58   335 4.34 4.35 2.75
+## 6  0.24 Very Good     J    VVS2  62.8    57   336 3.94 3.96 2.48
+{% endhighlight %}
 
 Estamos interessados em encontrar um bom modelo para prever o preço do diamante de acordo com as demais características que estão na base de dados.
 
 Para o exemplo, vou usar uma amostra aleatória deste banco de dados e vou renomear algumas colunas. 
 
-```{r}
+
+{% highlight r %}
 library(dplyr)
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## 
+## Attaching package: 'dplyr'
+## 
+## The following object is masked from 'package:stats':
+## 
+##     filter
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+{% endhighlight %}
+
+
+
+{% highlight r %}
 d <- diamonds %>% sample_n(1000)
 names(d)[c(8,9,10)] <- c("length", "width", "depth2")
-```
+{% endhighlight %}
 
 
 # Ajuste dos modelos
 
 Ajustaremos **todos** os modelos possíveis, isto é, os modelos que possuem todas as combinações possíveis das variáveis da base. Para isso vamos precisar do pacote `meifly`.
 
-```{r, eval=FALSE}
+
+{% highlight r %}
 library(meifly)
 
 y <- d$price
 x <- d %>% select(-price)
 models <- fitall(y, x, "lm")
-```
+{% endhighlight %}
 
-```{r, echo = F, results='hide'}
-library(meifly)
 
-y <- d$price
-x <- d %>% select(-price)
-models <- fitall(y, x, "lm")
-```
+{% highlight text %}
+## Fitting 511 models...
+{% endhighlight %}
 
 Com esse código ajustamos todos os modelos possíveis sendo `y` o vetor de respostas e `x` a matriz com todas as variáveis do banco de dados (exceto pela resposta).
 
@@ -71,14 +114,20 @@ A primeira proposta é visualizar o conjunto de modelos em seu nível mais alto:
 
 Usando a função `summary` no objeto `models` criado obtemos estatísticas algumas estatísticas de qualidade de ajuste de cada um dos modelos ajustados.
 
-```{r, results='asis'}
+
+{% highlight r %}
 s_models <- summary(models)
 names(s_models) # variaveis obtidas para cada mdoelo
-```
+{% endhighlight %}
+
+ [1] ".id"           "r.squared"     "adj.r.squared" "sigma"        
+ [5] "statistic"     "p.value"       "df"            "logLik"       
+ [9] "AIC"           "BIC"           "deviance"      "df.residual"  
 
 A partir deste `summary` dos modelos, Hadley propôs o seguinte gráfico.
 
-```{r}
+
+{% highlight r %}
 library(tidyr)
 s_models %>% 
   select(df, AIC, BIC, adj.r.squared, logLik) %>%
@@ -88,7 +137,9 @@ s_models %>%
   ggplot(aes(df, value)) + 
   geom_point() +
   facet_wrap(~statistic)
-```
+{% endhighlight %}
+
+![plot of chunk unnamed-chunk-6](https://dl.dropboxusercontent.com/u/40339739/jekyll/2015-05-06-visualizacao-modelos-lineares-meifly/unnamed-chunk-6-1.png) 
 
 No eixo x encontramos o número de parâmetros de cada modelo e no eixo y o valor da estatística. Note que para AIC e BIC, quanto menor melhor. Já para o R-quadrado ajustado e para o log-verossimilhança, quanto maior melhor.
 
@@ -100,20 +151,24 @@ Nesta sessão é proposta uma análise dos modelos no nível de seus coeficiente
 
 Usando o pacote `meifly` podemos obter uma tabela em que cada linha é um coeficiente de cada modelo, além de sua estimativa, valor-p, estatística de teste, etc. Para isso basta usar o código abaixo.
 
-```{r}
+
+{% highlight r %}
 coefs <- coef(models)
-```
+{% endhighlight %}
 
 As visualizações, aqui, ficam um pouco mais complicadas uma vez que os parâmetros estão em escalas diferentes e são difíceis de serem comparados. No entanto, o gráfico a seguir pode dizer alguma coisa:
 
-```{r}
+
+{% highlight r %}
 coefs %>% 
   filter(estimate != 0) %>%
   ggplot(aes(y = p.value, x = term)) +
   geom_boxplot() +
   geom_hline(yintercept = 0.05) + 
   coord_cartesian(ylim = c(0, 0.5))
-```
+{% endhighlight %}
+
+![plot of chunk unnamed-chunk-8](https://dl.dropboxusercontent.com/u/40339739/jekyll/2015-05-06-visualizacao-modelos-lineares-meifly/unnamed-chunk-8-1.png) 
 
 Neste gráfico temos o valor-p do parâmetro em cada modelo no eixo y e qual é o termo no eixo x. Note que a caixa do boxplot dos valores do parâmetro relacionado à variável `carat` está totalmente encolhida abaixo do corte de 5%. Isso pode indicar que essa variável é necessária na modelagem, além de que não deve estar associada com nenhuma outra variável. Já o parâmtero relacionado à cor `C` não parece ser importante, apesar de que em alguns modelos ele teve um valor-p menor do que 0.05.
 
