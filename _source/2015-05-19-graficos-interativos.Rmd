@@ -1,0 +1,52 @@
+---
+layout: post
+title: 'Gráficos interativos com o R'
+date : 2015-05-19
+tags: [r, graficos]
+--- 
+
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+Recentemente a comunidade do R tem feito um grande esforço em criar visualizações interativas. A partir dessa ideia surgiu o [Shiny](http://shiny.rstudio.com/) que é um framework completo para fazer aplicativos interativos. Para serem usados junto com o shiny, surgiram outros inúmeros pacotes que importam gráficos feitos em javascript (que geralmente são mais dinâmicos) para o R. Mas o legal, é que eles podem ser usados em páginas da internet como esta. Veja alguns pacotes que selecionei.
+
+
+# googleVis
+
+O google tem uma [ferramenta pública de gráficos](https://developers.google.com/chart/) em javascript que é extremamente flexível e, ao meu ver, faz por padrão gráficos muito bonitos. Além disso, a documentação dela é muito boa!
+
+O Markus Gesmann e o Diego de Castillo escreveram um pacote que "liga" o R à essa ferramenta de gráficos de o google, e o resultado foi o [googleVis](http://cran.r-project.org/web/packages/googleVis/vignettes/googleVis.pdf).
+
+Veja abaixo, alguns exemplos de uso!
+
+```{r, results='asis'}
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(googleVis))
+
+mtcars %>% 
+  select(mpg, cyl) %>% 
+  gvisScatterChart(options = list(height = "400px", width = "400px")) %>% 
+  print(tag = "chart")
+```
+
+```{r, results='asis'}
+mtcars %>%
+  group_by(am) %>% 
+  summarise(count = n()) %>%
+  mutate(am = as.character(am)) %>%
+  select(am, count) %>% 
+  gvisBarChart(options = list(height = "400px", width = "400px")) %>% 
+  print(tag = "chart")
+```
+
+# metrics graphics
+
+
+
+
+
+
+
+
