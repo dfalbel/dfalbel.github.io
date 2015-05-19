@@ -5,11 +5,6 @@ date : 2015-05-19
 tags: [r, graficos]
 --- 
 
-<script type="text/javascript"
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
-
 Recentemente a comunidade do R tem feito um grande esforço em criar visualizações interativas. A partir dessa ideia surgiu o [Shiny](http://shiny.rstudio.com/) que é um framework completo para fazer aplicativos interativos. Para serem usados junto com o shiny, surgiram outros inúmeros pacotes que importam gráficos feitos em javascript (que geralmente são mais dinâmicos) para o R. Mas o legal, é que eles podem ser usados em páginas da internet como esta. Veja alguns pacotes que selecionei.
 
 
@@ -17,7 +12,7 @@ Recentemente a comunidade do R tem feito um grande esforço em criar visualizaç
 
 O google tem uma [ferramenta pública de gráficos](https://developers.google.com/chart/) em javascript que é extremamente flexível e, ao meu ver, faz por padrão gráficos muito bonitos. Além disso, a documentação dela é muito boa!
 
-O Markus Gesmann e o Diego de Castillo escreveram um pacote que "liga" o R à essa ferramenta de gráficos de o google, e o resultado foi o [googleVis](http://cran.r-project.org/web/packages/googleVis/vignettes/googleVis.pdf).
+O Markus Gesmann e o Diego de Castillo escreveram um pacote que "liga" o R à essa ferramenta, e o resultado foi o [googleVis](http://cran.r-project.org/web/packages/googleVis/vignettes/googleVis.pdf). Para instalar basta usar o comando `install.packages("googleVis")`.
 
 Veja abaixo, alguns exemplos de uso!
 
@@ -26,7 +21,7 @@ suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(googleVis))
 
 mtcars %>% 
-  select(mpg, cyl) %>% 
+  select(hp, mpg) %>% 
   gvisScatterChart(options = list(height = "400px", width = "400px")) %>% 
   print(tag = "chart")
 ```
@@ -41,9 +36,48 @@ mtcars %>%
   print(tag = "chart")
 ```
 
+Com o google Vis é necessário manipular a tabela e deixá-la sempre no formato em que a biblioteca entende. As vezes isso dá um pouco de trabalho! Veja por exemplo, pra fazer um gráfico de dispersão do `mpg` pelo `hp` em que a cor dos pontos indica se o carro é automático ou não. 
+
+```{r, results='asis'}
+suppressPackageStartupMessages(library(tidyr))
+mtcars %>% 
+  mutate(id = 1:nrow(.)) %>%
+  select(id,hp,mpg,am) %>%
+  spread(am,mpg) %>%
+  select(-id) %>%
+  gvisScatterChart(options = list(height = "400px", width = "400px")) %>% 
+  print(tag = "chart")
+```
+
 # metrics graphics
 
+É uma [biblioteca de gráficos](http://metricsgraphicsjs.org/) em javascript feita pela Mozilla (a mesma do Firefox). É otimizada para séries temporais, mas da pra fazer outros tipos de gráfico também.
 
+A interface para o R foi feita pelo [hrbrmstr](https://github.com/hrbrmstr/metricsgraphics) e tem os comandos muito parecidos com o que faríamos em R mesmo.
+
+Para instalar basta rodar `devtools::install_github("hrbrmstr/metricsgraphics")`.
+
+Veja alguns exemplos de gráficos!
+
+```{r, results = "asis"}
+library(metricsgraphics)
+mtcars %>%
+  mjs_plot(x=hp, y=mpg, width=400, height = 400) %>%
+  mjs_point()
+```
+
+
+```{r}
+mtcars %>%
+  group_by(am) %>%
+  summarise(count = n()) %>%
+  select(am, count) %>%
+  mutate(am = paste0("am=",am)) %>%
+  data.frame() %>%
+  mjs_plot(x=count, y=am, width=400, height=400) %>%
+  mjs_bar() %>%
+  mjs_axis_x(xax_format = 'plain')
+```
 
 
 
