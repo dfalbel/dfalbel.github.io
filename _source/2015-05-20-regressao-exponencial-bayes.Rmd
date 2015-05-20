@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Um simples modelo de análise de sobrevivência usando MCMC'
+title: 'Um modelo simples de análise de sobrevivência usando MCMC no R'
 date : 2015-05-21
 tags: [r, graficos]
 --- 
@@ -9,7 +9,7 @@ tags: [r, graficos]
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 
-Análise de sobrevivência é uma área da estatística que modelo variáveis positivas que podem apresentar censura, ou seja observações incompletas.
+Análise de sobrevivência é uma área da estatística que modela variáveis positivas que podem apresentar censura, ou seja observações incompletas.
 
 Neste post, vamos discutir como ajustar um modelo bem simples de análise de sobrevivência, usando MCMC.
 
@@ -20,6 +20,7 @@ Suponha o seguinte modelo. $$T \sim exponencial(\theta)$$ sendo que alguns indiv
 Vou gerar alguns dados no R para poder iniciar o estudo. Vamos utilizar uma exponencia com taxa 1/100 e taxa de censura será de aproximadamente 30%.
 
 ```{r}
+set.seed(719)
 dados <- data.frame(
   t = rexp(100, rate = 1/100), 
   ev = as.numeric(runif(100) > 0.7)
@@ -45,7 +46,7 @@ L <- function(param, dados){
     yes = dexp(dados$t, theta, log = T),  # isso é f(t)
     no  = pexp(dados$t, theta, log.p = T, lower.tail = F) # lower tail=F indica S(t)
   )
-  #cat(sum(is.na(ver)))
+  
   ver <- ifelse(is.nan(ver), -Inf, ver)
   ver <- ifelse(ver == Inf, 0, ver)
   sum(ver)
@@ -82,6 +83,7 @@ Para obter uma amostra aleatória da nossa posteriori vamos usar o MCMC. Neste c
 
 ```{r}
 library(mcmc)
+set.seed(738)
 out <- metrop(posteriori, initial = 0, nbatch = 10000, dados = dados)
 ```
 
@@ -110,6 +112,7 @@ acf(out$batch)
 # Mais uma rodada
 
 ```{r}
+set.seed(172)
 out2 <- metrop(out, nbatch = 5000, nspac = 30, dados = dados)
 ```
 
