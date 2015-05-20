@@ -1,0 +1,30 @@
+---
+layout: post
+title: 'Alguns métodos de diagnóstico para o MCMC'
+date : 2015-05-21
+tags: [r, graficos]
+--- 
+
+Charlie Geyer é o autor do pacote `mcmc` do R, que eu usei em outros posts: [1](http://dfalbel.github.io/2015/05/regressao-linear-bayesiana.html), [2](http://dfalbel.github.io/2015/05/visualizacao-regressao-linear-bayesiana.html) e [3](http://dfalbel.github.io/2015/05/modelo-arma-verossimilhanca.html). Ele é professor de estatística na Universidade de Minnesota, e além disso, mantém um site bem interessante sobre MCMC. Não sei qual é a homepage, sempre entro por este [link](http://users.stat.umn.edu/~geyer/mcmc/diag.html), que foi o primeiro que encontrei.
+
+Neste site ele explica de forma curta e rápida (as vezes até grossa) seus pensamentos sobre como fazer MCMC do jeito certo. Por exemplo, olha o que ele pensa sobre os métodos de diagnóstico para o MCMC:
+
+> diagnostics only find obvious, gross, embarrassing problems that jump out of simple plots.
+
+Enfim, apesar de só achar problemas óbvios, grosseiros e vergonhosos, não queremos esses erros em nossas análises, então vamos aos métodos que podemos utilizar para evitá-los.
+
+# taxa de aceitação (acceptance rate)
+
+# gráficos da função de autocorrelação
+
+# múltiplas cadeias
+
+# Referências
+
+ - Geyer, C. J. (1992). Practical Markov chain Monte Carlo (with discussion).
+Statistical Science, 7, 473–511.[link](https://faculty.washington.edu/jmiyamot/p548/geyercj%20practical%20markov%20chain%20monte%20carlo.pdf)
+- Hoff Chapter 7 [link](https://stat.duke.edu/courses/Fall09/sta290/Lectures/Diagnostics/param-diag.pdf)
+- coda [link](http://www.people.fas.harvard.edu/~plam/teaching/methods/convergence/convergence_print.pdf)
+
+
+
