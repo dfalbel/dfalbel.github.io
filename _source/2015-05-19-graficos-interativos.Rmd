@@ -79,6 +79,66 @@ mtcars %>%
   mjs_axis_x(xax_format = 'plain')
 ```
 
+# ECharts
+
+A Baidu que é o terceiro maior motor de busca do mundo e o dominante na China, ultrapassando inclusive o Google e o Yahoo! também tem a sua biblioteca de gráficos.
+
+O Yihui que é famoso por ter feito o `knitr` fez uma interface da biblioteca do ECharts para o R, chamada [recharts](https://github.com/yihui/recharts).
+
+Os gráficos também são bem bonitinhos!!
+
+Para instalar:
+```{r, eval=F}
+install.packages(
+  'recharts',
+  repos = c('http://yihui.name/xran', 'http://cran.rstudio.com')
+)
+```
+
+Alguns exemplos de gráficos:
+
+```{r, results ="asis"}
+library(recharts)
+mtcars %>%
+  echart(~hp, ~mpg, width = 400, height = 400)
+```
+
+```{r, results = "asis"}
+mtcars %>%
+  mutate(am = paste0("am=", am)) %>%
+  echart(~hp, ~mpg, series = ~am, width = 400, height = 400)
+```
+
+
+A ECharts é muito flexível, assim como o Google Charts. Vale a pena olhar a [documentação](http://echarts.baidu.com/). Da pra fazer praticamente qualquer tipo de gráfico!
+
+
+# Chartist
+
+O [Chartist](http://gionkunz.github.io/chartist-js/index.html) é muito mais simples do que as bibliotecas que mostrei anteriormente. Mas faz uns gráficos bem bonitos também.
+
+Para instalar use:
+```{r, eval = F}
+devtools::install_github("yutannihilation/chartist")
+```
+
+Veja um exemplo de gráfico. Esse é o mesmo exemplo do [github do pacote](https://github.com/yutannihilation/chartist). Não consegui fazer um gráfico de dispersão ainda.
+
+```{r, results = "asis"}
+library(chartist)
+set.seed(324)
+data <- data.frame(
+  day = paste0("day", 1:10),
+  A   = runif(10, 0, 10),
+  B   = runif(10, 0, 10),
+  C   = runif(10, 0, 10)
+)
+chartist(data, day)
+```
+
+# Conclusão
+
+O número de bibiotecas de gráficos como essas no R só tende a crescer. Aqui falei de algumas mas já existem muitas outras. Inclusive, não citei a [ggvis do Rstudio](http://ggvis.rstudio.com/) que é uma tentativa de fazer uma biblioteca interativa e baseada na gramática dos gráficos (como no ggplot2).
 
 
 
