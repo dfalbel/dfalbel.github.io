@@ -24,7 +24,7 @@ cores
 
 
 {% highlight text %}
-## [1] "#240C4C" "#4B69A9" "#B52F25" "#EBDCC6" "#D58E5D"
+## [1] "#4B69A9" "#B52F25" "#240C4C" "#D58E5D" "#EBDCC6"
 {% endhighlight %}
 
 Esse código retorna um vetor de cores, que pode ser exibido usando a função exibir que acompanha o pacote `paletaCores`.
@@ -61,7 +61,7 @@ head(img, n = 5)
 
 Ou seja, é um `data.frame` que mapeia cada pixel, identificado por sua coordenada `x,y` a uma cor que é identificada pela trípla de valores `rgb`.
 
-Então como separar as cores mais importantes e diferentes entre si da imagem? Aqui usamos a técnica de clusterização conhecida como kmeans. Usamos a cor, definida pelas tripla rgb como variáveis que diferenciam os pixels. 
+Então como separar as cores mais importantes e diferentes entre si da imagem? Aqui usamos a técnica de clusterização conhecida como kmeans. As variáveis utilizadas foram cada atributo da cor dos píxels: `r`, `g` e `b`.
 
 Veja o código da função `criar_paleta`.
 
