@@ -1,0 +1,74 @@
+---
+layout: post
+title: 'Criando paletas de cores a partir imagens no R'
+date : 2015-09-28
+tags: [r, graficos, cores, imagens]
+--- 
+
+Recentemente eu quis obter as cores predominantes de uma foto para usá-las em um gráfico que estava fazendo. Acabei achando o problema interessante: não é óbvio determinar uma maneira de encontrar as cores distintas, porém predominantes, em uma imagem.
+
+Então, fiz um pacote do R que lê uma imagem em `jpeg` e cria uma paleta de cores baseada nesta imagem. Abaixo mostro um exemplo, em seguida explico rapidamente como o algoritmo funciona.
+
+O pacote é instalado utilizando `devtools::install_github('dfalbel/paletaCores')`. Em seguida, você pode obter a paleta da seguinte maneira.
+
+![david-bowie](https://vice-images.vice.com/images/content-images/2015/09/09/mick-rock-tk-body-image-1441819666.jpg?resize=*:*&output-quality=)
+
+
+```{r}
+suppressPackageStartupMessages(library(paletaCores))
+cores <- criar_paleta("../images/david bowie.jpeg")
+cores
+```
+
+Esse código retorna um vetor de cores, que pode ser exibido usando a função exibir que acompanha o pacote `paletaCores`.
+
+```{r, fig.height=2, fig.width=7}
+exibir(cores)
+```
+
+# Como funciona
+
+A primeiro passo que é necessário entender é como uma imagem é interpretada pelo `R`. O pacote `paletaCores` possui uma função, que não é exportada, que serve para ler uma imagem.
+
+A imagem no `R` é representada por um `data.frame` com o seguinte formato:
+
+```{r}
+img <- paletaCores:::ler("../images/david bowie.jpeg")
+head(img, n = 5)
+```
+
+Ou seja, é um `data.frame` que mapeia cada pixel, identificado por sua coordenada `x,y` a uma cor que é identificada pela trípla de valores `rgb`.
+
+Então como separar as cores mais importantes e diferentes entre si da imagem? Aqui usamos a técnica de clusterização conhecida como kmeans. Usamos a cor, definida pelas tripla rgb como variáveis que diferenciam os pixels. 
+
+Veja o código da função `criar_paleta`.
+
+```{r}
+paletaCores::criar_paleta
+```
+
+Utilizamos, em seguida, a cor representada pelo centróide de cada cluster criado como cor da paleta.
+
+# Mais exemplos
+
+![praia](/images/2015-09-28-paleta-de-cores-img/praia.jpg)
+
+```{r, fig.height=2, fig.width=7}
+criar_paleta("../images/2015-09-28-paleta-de-cores-img/praia.jpg") %>% exibir
+```
+
+![vulcao](/images/2015-09-28-paleta-de-cores-img/vulcao.jpeg)
+
+```{r, fig.height=2, fig.width=7}
+criar_paleta("../images/2015-09-28-paleta-de-cores-img/vulcao.jpeg") %>% exibir
+```
+
+
+
+
+
+
+
+
+
+
