@@ -27,6 +27,6 @@ Que quer dizer "87% das estatísticas são *inventadas* na hora"
 
 E ela vem junto com esse quadrinho:
 
-<img src = http://i.stack.imgur.com/k2eEh.gif></img>
+<img src="http://i.stack.imgur.com/k2eEh.gif"></img>
 
 Enfim, vale a pena ler [o post](http://stats.stackexchange.com/questions/726/famous-statistical-quotations), você vai encontrar bastante coisa legal!
