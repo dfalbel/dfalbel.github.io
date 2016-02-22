@@ -14,7 +14,7 @@ Nomeado em memória de Edward Simpson (1922), o primeiro estatístico a populari
 
 O exemplo clássico do Simpson é de um grupo de pacientes doentes que tiveram a opção de tentar um remédio novo. Os resultados obtidos foram os seguintes.
 
-              | Drug                           | No drug
+Grupo         | Drug                           | No drug
 --------------------------------------------------------------------------------
 Men           | 81 out of 87 recovered (93%)   | 234 out of 270 recovered (87%)
 Women         | 192 out of 263 recovered (73%) | 55 out of 80 recovered (69%)
