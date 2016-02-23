@@ -47,8 +47,65 @@ A resposta de Pearl, em seu livro, é muito completa. Ele diz:
 > **não** é devida à presença do estrógeno. Isso significa que devemos consultar os dados segregados,
 > que nos mostra inequivocadamente que o medicamento é útil.
 
+# Analisando no R
 
+Supondo que o banco de dados que gerou a tabela acima seja da seguinte forma:
 
+```{r}
+dados <- data.frame(
+  id = 1:700,
+  sexo = c(rep("Homem", 357), rep("Mulher", 343)),
+  remedio = c(rep(1, 87), rep(0, 270), rep(1, 263), rep(0, 80)),
+  recuperou = c(rep(1, 81), rep(0, 6), rep(1, 234), rep(0, 36), 
+                rep(1, 192), rep(0, 71), rep(1, 55), rep(0, 25))
+)
+```
+
+Veja que na tabela resumo eles estão iguais:
+
+```{r}
+library(dplyr)
+dados %>% 
+  group_by(sexo, remedio) %>% 
+  summarise(n_rec = sum(recuperou), n = n())
+```
+
+Para estimar o efeito do uso do medicamento na recuperação poderíamos ajustar um
+modelo de regressão logística com o seguinte código:
+
+```{r}
+modelo <- glm(recuperou ~ sexo + remedio, data = dados, family = "binomial")
+```
+
+Calculamos a probabilidade de recuperação para cada um dos casos possíveis.
+
+```{r}
+casos <- expand.grid(sexo = c("Homem", "Mulher"), remedio = c(1,0))
+casos$prob <- predict(modelo, newdata = casos, type = "response")
+```
+
+Agora podemos ver que para quem recee o medicamento a probabilidade de recuperação, não importando o gênero do indivíduo.
+
+```{r}
+tab <- casos %>% group_by(remedio) %>% summarise(p = mean(prob))
+tab
+```
+
+Vemos então que ao tomar o remédio a probabilidade de cura aumenta em `r round((tab$p[2]/tab$p[1] - 1)*100, digits = 2)`%.
+
+A análise incorreta, sem considerar o sexo, mostraria outra conclusão (vide
+a tabela abaixo).
+
+```{r}
+modelo <- glm(recuperou ~ remedio, data = dados, family = "binomial")
+casos <- expand.grid(sexo = c("Homem", "Mulher"), remedio = c(1,0))
+casos$prob <- predict(modelo, newdata = casos, type = "response")
+tab <- casos %>% group_by(remedio) %>% summarise(p = mean(prob))
+tab
+```
+
+Assim seria observada uma queda de `r round((tab$p[2]/tab$p[1] - 1)*100, digits = 2)`%
+na probabilidade de recuperação com o uso do medicamento.
 
 
 

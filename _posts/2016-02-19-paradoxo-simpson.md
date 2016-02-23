@@ -47,8 +47,135 @@ A resposta de Pearl, em seu livro, é muito completa. Ele diz:
 > **não** é devida à presença do estrógeno. Isso significa que devemos consultar os dados segregados,
 > que nos mostra inequivocadamente que o medicamento é útil.
 
+# Analisando no R
+
+Supondo que o banco de dados que gerou a tabela acima seja da seguinte forma:
 
 
+{% highlight r %}
+dados <- data.frame(
+  id = 1:700,
+  sexo = c(rep("Homem", 357), rep("Mulher", 343)),
+  remedio = c(rep(1, 87), rep(0, 270), rep(1, 263), rep(0, 80)),
+  recuperou = c(rep(1, 81), rep(0, 6), rep(1, 234), rep(0, 36), 
+                rep(1, 192), rep(0, 71), rep(1, 55), rep(0, 25))
+)
+{% endhighlight %}
+
+Veja que na tabela resumo eles estão iguais:
+
+
+{% highlight r %}
+library(dplyr)
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## 
+## Attaching package: 'dplyr'
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+{% endhighlight %}
+
+
+
+{% highlight r %}
+dados %>% 
+  group_by(sexo, remedio) %>% 
+  summarise(n_rec = sum(recuperou), n = n())
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Source: local data frame [4 x 4]
+## Groups: sexo [?]
+## 
+##     sexo remedio n_rec     n
+##   (fctr)   (dbl) (dbl) (int)
+## 1  Homem       0   234   270
+## 2  Homem       1    81    87
+## 3 Mulher       0    55    80
+## 4 Mulher       1   192   263
+{% endhighlight %}
+
+Para estimar o efeito do uso do medicamento na recuperação poderíamos ajustar um
+modelo de regressão logística com o seguinte código:
+
+
+{% highlight r %}
+modelo <- glm(recuperou ~ sexo + remedio, data = dados, family = "binomial")
+{% endhighlight %}
+
+Calculamos a probabilidade de recuperação para cada um dos casos possíveis.
+
+
+{% highlight r %}
+casos <- expand.grid(sexo = c("Homem", "Mulher"), remedio = c(1,0))
+casos$prob <- predict(modelo, newdata = casos, type = "response")
+{% endhighlight %}
+
+Agora podemos ver que para quem recee o medicamento a probabilidade de recuperação, não importando o gênero do indivíduo.
+
+
+{% highlight r %}
+tab <- casos %>% group_by(remedio) %>% summarise(p = mean(prob))
+tab
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Source: local data frame [2 x 2]
+## 
+##   remedio         p
+##     (dbl)     (dbl)
+## 1       0 0.7684074
+## 2       1 0.8229495
+{% endhighlight %}
+
+Vemos então que ao tomar o remédio a probabilidade de cura aumenta em 7.1%.
+
+A análise incorreta, sem considerar o sexo, mostraria outra conclusão (vide
+a tabela abaixo).
+
+
+{% highlight r %}
+modelo <- glm(recuperou ~ remedio, data = dados, family = "binomial")
+casos <- expand.grid(sexo = c("Homem", "Mulher"), remedio = c(1,0))
+casos$prob <- predict(modelo, newdata = casos, type = "response")
+tab <- casos %>% group_by(remedio) %>% summarise(p = mean(prob))
+tab
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Source: local data frame [2 x 2]
+## 
+##   remedio         p
+##     (dbl)     (dbl)
+## 1       0 0.8257143
+## 2       1 0.7800000
+{% endhighlight %}
+
+Assim seria observada uma queda de -5.54%
+na probabilidade de recuperação com o uso do medicamento.
 
 
 
