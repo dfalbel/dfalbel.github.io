@@ -14,3 +14,4 @@ Lista de blogs e sites que eu gosto de ler. Em constante atualização.
 - [Edwin Chen](http://blog.echen.me/)
 - [The 20% Statistician](http://daniellakens.blogspot.com.br/)
 - [StatsBlogs](http://www.statsblogs.com/)
+- [FastML](http://fastml.com/)
