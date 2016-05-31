@@ -1,0 +1,67 @@
+---
+layout: post
+title: 'Modelando usando o `purrr`'
+date : 2016-05-31
+tags: [modelagem, randomForest]
+--- 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Neste post vou apresentar a mecânica de modelagem usando as funções do pacote `purrr`.
+Para isso vamos utilizar o banco de dados [MINIST](http://yann.lecun.com/exdb/mnist/) que foi obtido, já processado, [nesta competição do Kaggle](https://www.kaggle.com/c/digit-recognizer). O objetivo será criar um modelo de **random forest** para prever, a partir dos pixels da imagem, o número que está escrito.
+
+Cada uma das imagens do banco de dados está representada por uma linha que contém a informação do valor dos seus 784 pixels. Além disso a base fornecida na competição já
+possuia o label (coluna que indica o valor escrito na imagem).
+
+A leitura dos dados pode ser realizada da seguinte forma pois eles estão disponíveis no [repositório do blog no github](https://github.com/dfalbel/dfalbel.github.io/tree/master/data).
+
+```{r leitura}
+library(purrr)
+dados <- read.csv("https://github.com/dfalbel/dfalbel.github.io/raw/master/data/train.csv")
+```
+
+## Separação em base de construção e validação
+
+O primeiro passo do processo de modelagem é separar a base em dois. A base de treino
+que será utilizada na construção do modelo e a base de validação que só será utilizada
+no final para a verificação da consistência do algoritmo, e para avaliação da
+performance esperada em uma nova base.
+
+Usaremos 70% da base para construção e os outros 30% para validação.
+
+```{r separacao}
+train_i <- sample(1:nrow(dados), size = nrow(dados)*0.7, replace = FALSE)
+train <- dados[train_i,]
+test <- dados[-train_i,]
+```
+
+## Seleção dos hiperparâmetros
+
+O modelo escolhido foi o **random forest**, este modelo possui os seguintes **hiperparâmetros** que chamaremos de **ntree**, **mtry**, **sampsize** e **nodesize**. Eles possuem o seguinte significado:
+
+- **ntree** número de árvores que serão construídas.
+- **mtry** número de variáveis que serão aleatóriamente escolhidas como candidados cada quebra.
+- **sampsize** tamanho da amostra usado para treinar cada uma das árvores. [Esta pergunta](http://stats.stackexchange.com/a/24914/44359) do [Cross Validated](http://stats.stackexchange.com/) possui uma boa discussão sobre o efeito desse parâmetro no resultado do modelo.
+- **nodesize** mínimo tamanho dos nós. Queremos 'nós' não muito pequenos para evitar *superajuste*, mas também nãow queremos nós muito grandes para não perdermos performance. 
+
+A seleção dos *hiperparâmetros* será feita usando cross-validation de 10 partes.
+
+```{r crossvalidation}
+grupos <- sample(1:10, size = nrow(train), replace = T)
+test_cv <- 1:10 %>% 
+  map(~train[which(grupos == .x),])
+train_cv <- 1:10 %>%
+  map(~train[which(grupos != .x),])
+```
+
+
+
+
+
+
+
+
+
+
