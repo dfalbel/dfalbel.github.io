@@ -1,16 +1,18 @@
 ---
 layout: post
-title: 'Modelando usando o `purrr`'
+title: 'Seleção de hiperparâmetros do Random Forest'
 date : 2016-05-31
 tags: [modelagem, randomForest]
 --- 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval = F)
 ```
 
 Neste post vou apresentar a mecânica de modelagem usando as funções do pacote `purrr`.
 Para isso vamos utilizar o banco de dados [MINIST](http://yann.lecun.com/exdb/mnist/) que foi obtido, já processado, [nesta competição do Kaggle](https://www.kaggle.com/c/digit-recognizer). O objetivo será criar um modelo de **random forest** para prever, a partir dos pixels da imagem, o número que está escrito.
+
+![minist](/images/mnistExamples.png)
 
 Cada uma das imagens do banco de dados está representada por uma linha que contém a informação do valor dos seus 784 pixels. Além disso a base fornecida na competição já
 possuia o label (coluna que indica o valor escrito na imagem).
@@ -48,13 +50,42 @@ O modelo escolhido foi o **random forest**, este modelo possui os seguintes **hi
 
 A seleção dos *hiperparâmetros* será feita usando cross-validation de 10 partes.
 
+### Definição do Grid
+
+Em primeiro lugar definimos um grid de parâmetros que iremos testar na validação
+cruzada. Não vamos variar os valores do `sampsize` nem do `nodesize` uma vez que 
+eles dependem um pouco do tamanho da amostra.
+
+```{r grid}
+grid <- expand.grid(
+  ntree = c(1400 + 150*(-7:7)),
+  mtry = floor(sqrt(ncol(train))) + 5*(-2:8) 
+)
+```
+
+Como o padrão da função `randomForest` do `R` é `ntree = 500` e `mtry = floor(sqrt(ncol(train))`, variei os parâmetros no grid em torno disso. 
+
+### Separação dos índices de validação cruzada
+
+A seguir separamos os índices que serão usados em cada uma das construções
+e validações, no processo de Cross Validation.
+
 ```{r crossvalidation}
 grupos <- sample(1:10, size = nrow(train), replace = T)
 test_cv <- 1:10 %>% 
-  map(~train[which(grupos == .x),])
+  map(~which(grupos == .x))
 train_cv <- 1:10 %>%
-  map(~train[which(grupos != .x),])
+  map(~which(grupos != .x))
 ```
+
+### Treinar os modelos
+
+```{r}
+library(plyr)
+grid %>% dlply()
+```
+
+
 
 
 
