@@ -72,17 +72,27 @@ e validações, no processo de Cross Validation.
 
 ```{r crossvalidation}
 grupos <- sample(1:10, size = nrow(train), replace = T)
-test_cv <- 1:10 %>% 
-  map(~which(grupos == .x))
-train_cv <- 1:10 %>%
-  map(~which(grupos != .x))
+indices_cv <- 1:10 %>% map(function(x){
+  list(
+    train = which(grupos != x), 
+    test = which(grupos == x)
+  )
+})
 ```
 
-### Treinar os modelos
+Agora vamos definir uma função que treina um modelo para cada indice e já o valida nos índices de validação.
 
 ```{r}
-library(plyr)
-grid %>% dlply()
+treinar <- function(indices_cv, train, ntree = 500, mtry = 28){
+  modelo <- randomForest(label ~ ., replace = T,
+                         ntree = ntree, mtry = mtry, 
+                         data = train[indices_cv$train, ]
+                         )
+  pred <- predict(modelo, newdata = train[indices_cv$test, ])
+  accuracy <- sum(pred == train$label[indices_cv$test])/lenght(pred)
+  return(accuracy)
+}
+res <- laply(indices_cv, treinar, train, .progress = "text")
 ```
 
 
