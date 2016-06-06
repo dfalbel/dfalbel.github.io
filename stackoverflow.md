@@ -18,7 +18,7 @@ permalink: /stackoverflow/
   
 <br>
 
-Minha lista de posts no Stack Overflow:
+Minha lista de posts no [Stack Overflow](http://pt.stackoverflow.com/):
 
 - [Área da interseção de dois polígonos](http://pt.stackoverflow.com/a/132287/6036)
 - [Criar pacote no Windows](http://pt.stackoverflow.com/a/132119/6036)
