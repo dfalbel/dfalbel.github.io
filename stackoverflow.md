@@ -16,8 +16,6 @@ permalink: /stackoverflow/
   (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
   
-<br>
-
 Minha lista de posts no [Stack Overflow](http://pt.stackoverflow.com/):
 
 - [Área da interseção de dois polígonos](http://pt.stackoverflow.com/a/132287/6036)
@@ -42,8 +40,6 @@ Minha lista de posts no [Stack Overflow](http://pt.stackoverflow.com/):
 <script>
   (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
-
-<br>
   
 <!-- Go to www.addthis.com/dashboard to customize your tools -->
 <div class="addthis_recommended_horizontal"></div>
