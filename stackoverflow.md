@@ -15,8 +15,9 @@ permalink: /stackoverflow/
 <script>
   (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
-  
-Minha lista de posts no [Stack Overflow](http://pt.stackoverflow.com/):
+
+Sempre que pssível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
+Abaixo está a minha lista de contribuições:
 
 - [Área da interseção de dois polígonos](http://pt.stackoverflow.com/a/132287/6036)
 - [Criar pacote no Windows](http://pt.stackoverflow.com/a/132119/6036)
@@ -38,6 +39,16 @@ Minha lista de posts no [Stack Overflow](http://pt.stackoverflow.com/):
 - [Equivalente a SOMASES do Excel, no R](http://pt.stackoverflow.com/a/120810/6036)
 - [Como fazer correlação entre variáveis qualitativas e quantitativas no R?](http://pt.stackoverflow.com/a/120327/6036)
 - [Regressao Segmentada no R](http://pt.stackoverflow.com/a/119376/6036)
+- [bRasilLegis - XML content does not seem to be XML](http://pt.stackoverflow.com/a/119314/6036)
+- [Como criar uma barra de progresso dinâmica no R?](http://pt.stackoverflow.com/a/119312/6036)
+- [Existe alguma função que verifique se um determinado valor esta contido num certo intervalo?](http://pt.stackoverflow.com/a/118321/6036)
+- [Como posso obter a data e a hora atual em #R?](http://pt.stackoverflow.com/a/117019/6036)
+- [Como extrair um trecho especifico de uma string](http://pt.stackoverflow.com/a/115504/6036)
+- [Max de um campo numérico retornando NA](http://pt.stackoverflow.com/a/115193/6036)
+- [Erro: The condition has length > 1 and only the first element will be used](http://pt.stackoverflow.com/a/112053/6036)
+- [Como transformar gráfico de dispersão de pontos em densidade?](http://pt.stackoverflow.com/a/112049/6036)
+- [Proc means básico de SAS para R](http://pt.stackoverflow.com/a/111468/6036)
+- [Filtrar aquivo csv de 5GB no R](http://pt.stackoverflow.com/a/109028/6036)
 
 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 <!-- anuncio -->
