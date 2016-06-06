@@ -43,4 +43,3 @@ Minha lista de posts no [Stack Overflow](http://pt.stackoverflow.com/):
   
 <!-- Go to www.addthis.com/dashboard to customize your tools -->
 <div class="addthis_recommended_horizontal"></div>
-
