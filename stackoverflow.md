@@ -4,6 +4,20 @@ title: Stack Overflow
 permalink: /stackoverflow/
 ---
 
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- anuncio -->
+<ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-4000439994220643"
+    data-ad-slot="1442586415"
+    data-ad-format="auto">
+</ins>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+  
+<br>
+
 Minha lista de posts no Stack Overflow:
 
 - [Área da interseção de dois polígonos](http://pt.stackoverflow.com/a/132287/6036)
