@@ -16,7 +16,7 @@ permalink: /stackoverflow/
   (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
 
-Sempre que pssível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
+Sempre que possível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
 Abaixo está a minha lista de contribuições:
 
 - [Área da interseção de dois polígonos](http://pt.stackoverflow.com/a/132287/6036)
