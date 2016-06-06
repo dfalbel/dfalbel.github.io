@@ -31,5 +31,15 @@ Minha lista de posts no Stack Overflow:
 - [Converter coluna de data frame de caracteres para numérico](http://pt.stackoverflow.com/a/128232/6036)
 - [Como usar conteúdos de um vetor para montar o nome de um arquivo a ser salvo?](http://pt.stackoverflow.com/a/127823/6036)
 
-
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<!-- anuncio -->
+<ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-4000439994220643"
+    data-ad-slot="1442586415"
+    data-ad-format="auto">
+</ins>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
 
