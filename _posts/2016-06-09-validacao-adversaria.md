@@ -21,7 +21,7 @@ Na [parte 2 do post](http://fastml.com/adversarial-validation-part-two/), ele mo
 <blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Interesting idea on adversarial validation with Numerai data on <a href="https://twitter.com/fastml">@fastml</a> <a href="https://t.co/dqb0WupiMH">https://t.co/dqb0WupiMH</a></p>&mdash; Numerai (@numerai) <a href="https://twitter.com/numerai/status/740709465964478464">June 9, 2016</a></blockquote>
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-Resolvi replicar o experimento dele para verificar o resultado encontrado por ele. Utilizei a mesma idéia
+Resolvi replicar o experimento para verificar o resultado encontrado pelo blog. Utilizei a mesma idéia
 proposta pelo FastMl: Empilhar a base do torneio e a base de treino e tentar criar um modelo para prever se
 uma observação é da base de treino. Se o acerto do modelo for perto de 50%, quer dizer que as bases são muito parecidas. Se o modelo conseguir acertar de qual base de dados a observação é proveniente, significa que os
 bancos de dados possuem características muito diferentes.
@@ -149,11 +149,11 @@ modelo
 ##                      Number of trees: 100
 ## No. of variables tried at each split: 5
 ## 
-##         OOB estimate of  error rate: 20.52%
+##         OOB estimate of  error rate: 20.54%
 ## Confusion matrix:
 ##       FALSE  TRUE class.error
-## FALSE  6054 25723 0.809484848
-## TRUE    567 95753 0.005886628
+## FALSE  6007 25770 0.810963905
+## TRUE    545 95775 0.005658223
 {% endhighlight %}
 
 Na tabela acima, as linhas repesentam os valores verdadeiros e as colunas as categorias previstas pelo
@@ -200,7 +200,7 @@ as.numeric(performance(pred , "auc")@y.values)
 
 
 {% highlight text %}
-## [1] 0.8351809
+## [1] 0.8364159
 {% endhighlight %}
 
 Veja também que o AUC (área sobre a curva ROC) foi de 0.84, muito próxima da relatada no post do FastML. Se a base de testes fosse realmente uma
