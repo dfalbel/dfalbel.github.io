@@ -19,6 +19,8 @@ permalink: /stackoverflow/
 Sempre que possível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
 Abaixo está a minha lista de contribuições:
 
+- [Operação com listas de tamanhos muito grandes](http://pt.stackoverflow.com/a/134892/6036)
+- [Histograma 3D usando ggplot2](http://pt.stackoverflow.com/a/134811/6036)
 - [Área da interseção de dois polígonos](http://pt.stackoverflow.com/a/132287/6036)
 - [Criar pacote no Windows](http://pt.stackoverflow.com/a/132119/6036)
 - [Obter o modulo de um número negativo em R](http://pt.stackoverflow.com/a/132112/6036)
