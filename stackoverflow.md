@@ -19,6 +19,12 @@ permalink: /stackoverflow/
 Sempre que possível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
 Abaixo está a minha lista de contribuições:
 
+- [Exportar package](http://pt.stackoverflow.com/a/137683/6036)
+- [Passar dados arquivo CSV para array em R (BARPLOT)](http://pt.stackoverflow.com/a/137652/6036)
+- [Funções com quantidade de argumentos “dinâmica”](http://pt.stackoverflow.com/a/136766/6036)
+- [Web Scraping: Como alterar o valor de um botão drop down de um site usando R?](http://pt.stackoverflow.com/a/136247/6036)
+- [Como encaixar uma curva de Lowess em dados longitudinais usando R?](http://pt.stackoverflow.com/a/136120/6036)
+- [Modelos fit para cálculo de meta-regressão no R Studio](http://pt.stackoverflow.com/a/135160/6036)
 - [Operação com listas de tamanhos muito grandes](http://pt.stackoverflow.com/a/134892/6036)
 - [Histograma 3D usando ggplot2](http://pt.stackoverflow.com/a/134811/6036)
 - [Área da interseção de dois polígonos](http://pt.stackoverflow.com/a/132287/6036)
