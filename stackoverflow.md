@@ -19,6 +19,8 @@ permalink: /stackoverflow/
 Sempre que possível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
 Abaixo está a minha lista de contribuições:
 
+- [Reconhecimento de padrões](http://pt.stackoverflow.com/a/139634/6036)
+- [Transformar classe dentro de pacote](http://pt.stackoverflow.com/a/137902/6036)
 - [Exportar package](http://pt.stackoverflow.com/a/137683/6036)
 - [Passar dados arquivo CSV para array em R (BARPLOT)](http://pt.stackoverflow.com/a/137652/6036)
 - [Funções com quantidade de argumentos “dinâmica”](http://pt.stackoverflow.com/a/136766/6036)
