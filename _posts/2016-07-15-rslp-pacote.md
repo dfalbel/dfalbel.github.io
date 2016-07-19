@@ -60,8 +60,8 @@ rslp_doc(docs)
 ## [2] "nao com doc, ele faz mal par os dent."
 {% endhighlight %}
 
+## Update
 
-
-
-
+Esse pacote agora está no [CRAN](https://cran.r-project.org/web/packages/rslp/index.html)!!
+Em breve ele poderá ser instalado usando `install.packages("rslp")`.
 

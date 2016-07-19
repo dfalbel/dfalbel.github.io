@@ -46,8 +46,8 @@ docs <- c(
 rslp_doc(docs)
 ```
 
+## Update
 
-
-
-
+Esse pacote agora está no [CRAN](https://cran.r-project.org/web/packages/rslp/index.html)!!
+Em breve ele poderá ser instalado usando `install.packages("rslp")`.
 
