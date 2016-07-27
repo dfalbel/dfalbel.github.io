@@ -7,7 +7,7 @@ tags: [machine-learning]
 
 
 
-Este post tem o objetivo de comparar os pacotes `ranger` e `randomForest` para treinar
+Este post tem o objetivo de comparar os pacotes [`ranger`](https://github.com/imbs-hl/ranger) e `randomForest` para treinar
 modelos de Random Forest (Durd!). A motivação de fazer esta análise foi observar que 
 os dois pacotes têm resultados muitos distintos quando estava usando-os para prever a
 probabilidade de um evento. Esta é uma análise de simulação, portanto trata de um problema 
@@ -36,6 +36,7 @@ simulate_data <- function(n){
 
 
 {% highlight r %}
+set.seed(98123)
 treino <- simulate_data(10000)
 teste <- simulate_data(10000)
 {% endhighlight %}
@@ -62,39 +63,7 @@ Usando o `randomForest`:
 
 
 {% highlight r %}
-library(randomForest)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## randomForest 4.6-12
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Type rfNews() to see new features/changes/bug fixes.
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## 
-## Attaching package: 'randomForest'
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## The following object is masked from 'package:ranger':
-## 
-##     importance
-{% endhighlight %}
-
-
-
-{% highlight r %}
+suppressPackageStartupMessages(library(randomForest))
 modelo_randomForest <- randomForest(Y ~., data = treino,
                                     ntree = 100, 
                                     mtry = floor(sqrt(10)),
@@ -172,7 +141,7 @@ mean(abs(prob_real - pred_ranger))
 
 
 {% highlight text %}
-## [1] 0.09616153
+## [1] 0.3859596
 {% endhighlight %}
 
 
@@ -184,18 +153,19 @@ mean(abs(prob_real - pred_randomForest))
 
 
 {% highlight text %}
-## [1] 0.06829534
+## [1] 0.07355277
 {% endhighlight %}
 
 # Por que ocorre esta diferença?
 
 Provavelmente essa diferença está relacionada à forma com que cada pacote estima a probabilidade
 de Y = 1. O `ranger` fala explicitamente em usar *probability forests* conforme aparece na
-documentação: 
+[documentação](http://www.inside-r.org/packages/cran/ranger/docs/ranger): 
 
 > Grow a probability forest as in Malley et al. (2012).
 
 Já para o `randomForest` não encontrei a forma com que eles estima as probabilidades.
+Até fiz uma [pergunta no SO](http://stackoverflow.com/q/38618955/3297472) mas ainda não responderam :(
 
 
 
