@@ -75,7 +75,7 @@ Vamos agora comparar as probabilidades estimadas na base de treino pelos dois mo
 O seguinte código foi utilziado para calcular as probabilidades preditas para cada um dos pacotes,
 além da probabilidade real de resposta.
 ```{r}
-pred_ranger <- predict(modelo_ranger, teste)$predictions[,1]
+pred_ranger <- predict(modelo_ranger, teste)$predictions[,2]
 pred_randomForest <- predict(modelo_randomForest, teste, type = "prob")[,2]
 prob_real <- apply(teste[,1:10], 1, sum) %>% pnorm(mean = 5)
 ```

@@ -78,7 +78,7 @@ O seguinte código foi utilziado para calcular as probabilidades preditas para c
 além da probabilidade real de resposta.
 
 {% highlight r %}
-pred_ranger <- predict(modelo_ranger, teste)$predictions[,1]
+pred_ranger <- predict(modelo_ranger, teste)$predictions[,2]
 pred_randomForest <- predict(modelo_randomForest, teste, type = "prob")[,2]
 prob_real <- apply(teste[,1:10], 1, sum) %>% pnorm(mean = 5)
 {% endhighlight %}
@@ -141,7 +141,7 @@ mean(abs(prob_real - pred_ranger))
 
 
 {% highlight text %}
-## [1] 0.3859596
+## [1] 0.09555774
 {% endhighlight %}
 
 
