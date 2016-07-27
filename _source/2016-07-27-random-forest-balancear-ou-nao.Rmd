@@ -54,7 +54,7 @@ Vamos comparar alguns modelos treinados em diferentes taxas de balanceamento com
 Primeiramente vamos definir uma função balancear, que equilibra a taxa de respostas na base de acordo com um parâmetro `p`.
 
 ```{r}
-library(dplyr)
+suppressPackageStartupMessages(library(dplyr))
 balancear <- function(df, p){
   n_resposta <- sum(df$Y == "1")
   n_n_resposta <- floor((1 - p)*n_resposta/p)

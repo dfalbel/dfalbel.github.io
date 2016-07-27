@@ -55,35 +55,7 @@ Primeiramente vamos definir uma função balancear, que equilibra a taxa de resp
 
 
 {% highlight r %}
-library(dplyr)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## 
-## Attaching package: 'dplyr'
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-{% endhighlight %}
-
-
-
-{% highlight r %}
+suppressPackageStartupMessages(library(dplyr))
 balancear <- function(df, p){
   n_resposta <- sum(df$Y == "1")
   n_n_resposta <- floor((1 - p)*n_resposta/p)
