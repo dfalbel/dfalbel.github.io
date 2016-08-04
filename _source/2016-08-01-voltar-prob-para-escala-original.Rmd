@@ -22,6 +22,9 @@ página 215 do [livro do Gilberto A. Paula](https://www.ime.usp.br/~giapaula/tex
 
 Resolvi juntar os dois métodos. Vou ajustar um modelo de random forest, usar a sua probabilidade estimada para prever a probabilidade de resposta na base desbalanceada. Em seguida, vou usar o resultado do livro do Gilberto para ajustar o intercepto do modelo e voltá-las para a escala original.
 
+Uma outra abordagem é descrita [neste artigo](https://www.researchgate.net/publication/283349138_Calibrating_Probability_with_Undersampling_for_Unbalanced_Classification) de leitura razoavelmente simples. 
+Aiás, é bom saber o nome deste problema em ingês: Calibrating Probability with Undersampling for Unbalanced Classification.
+
 # Simulando um banco de dados
 
 Vou simular os dados usando o mesmo código do post anterior. A função `simulate` definida a seguir gera 10 variáveis aleatórias com distribuição uniforme para serem usadas como covariáveis. Em
