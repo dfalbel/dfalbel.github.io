@@ -19,6 +19,13 @@ permalink: /stackoverflow/
 Sempre que possível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
 Abaixo está a minha lista de contribuições:
 
+- [Comparar linhas as linhas entre dois quadro de dados?](http://pt.stackoverflow.com/a/146193/6036)
+- [Existe alguma maneira de eliminar elementos duplicados que não sejam exatamente iguais?](http://pt.stackoverflow.com/a/146108/6036)
+- [Gráfico de barras - ggplot2](http://pt.stackoverflow.com/a/145957/6036)
+- [Organizar dados no excel](http://pt.stackoverflow.com/a/145953/6036)
+- [Erro as.POSIXlt.character ao importar MDB no R](http://pt.stackoverflow.com/a/143503/6036)
+- [Como fazer mapas no R com processamento em paralelo?](http://pt.stackoverflow.com/a/142047/6036)
+- [Conversão de dados factor para numeric](http://pt.stackoverflow.com/a/141515/6036)
 - [Reconhecimento de padrões](http://pt.stackoverflow.com/a/139634/6036)
 - [Transformar classe dentro de pacote](http://pt.stackoverflow.com/a/137902/6036)
 - [Exportar package](http://pt.stackoverflow.com/a/137683/6036)
