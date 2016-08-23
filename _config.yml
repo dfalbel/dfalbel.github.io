@@ -7,6 +7,7 @@ baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://dfalbel.github.io" # the base hostname & protocol for your site
 twitter_username: dfalbel
 github_username:  dfalbel
+author: Daniel Falbel
 permalink: /:year/:month/:title.html
 
 # Build settings
