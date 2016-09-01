@@ -19,6 +19,16 @@ permalink: /stackoverflow/
 Sempre que possível, respondo perguntas no [Stack Overflow](http://pt.stackoverflow.com/).
 Abaixo está a minha lista de contribuições:
 
+- [Como ignorar links que não se adequem as condições estabelecidas e continuar com a raspagem?](http://pt.stackoverflow.com/a/150407/6036)
+- [Remover nomes duplicados com expressão regular](http://pt.stackoverflow.com/a/150033/6036)
+- [Erro ao utilizar o pacote plm - Error in x[, !na.check] : (subscript) logical subscript too long](http://pt.stackoverflow.com/a/148659/6036)
+- [Organizar Resultados Filtro de Kalman em uma Matriz](http://pt.stackoverflow.com/a/147816/6036)
+- [Como identificar corretamente os clusters utilizando kmeans?](http://pt.stackoverflow.com/a/147466/6036)
+- [Limpeza e Padronização de Texto](http://pt.stackoverflow.com/a/147461/6036)
+- [R - match e replace string](http://pt.stackoverflow.com/a/147408/6036)
+- [Grafico de colunas de um Data Frame usando GGPLOT](http://pt.stackoverflow.com/a/146554/6036)
+- [Como substituir valores por NA usando codificação de elementos (e não posição)?](http://pt.stackoverflow.com/a/146507/6036)
+- [Alterar gráficos dos betas de uma regressão](http://pt.stackoverflow.com/a/146369/6036)
 - [Comparar linhas as linhas entre dois quadro de dados?](http://pt.stackoverflow.com/a/146193/6036)
 - [Existe alguma maneira de eliminar elementos duplicados que não sejam exatamente iguais?](http://pt.stackoverflow.com/a/146108/6036)
 - [Gráfico de barras - ggplot2](http://pt.stackoverflow.com/a/145957/6036)
