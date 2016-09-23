@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Prevendo probabilidades em bases balanceadas'
+title: 'Quantidade de perguntas sobre R no pt.stackoverflow'
 date : 2016-09-22
 tags: [stackoverflow]
 --- 
