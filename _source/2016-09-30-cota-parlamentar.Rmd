@@ -9,9 +9,9 @@ tags: [r]
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Na semana passa adicionei o repositório [cota-parlamentar](https://github.com/dfalbel/cota-parlamentar) no meu [github](https://github.com/dfalbel).
+Na semana passada adicionei o repositório [cota-parlamentar](https://github.com/dfalbel/cota-parlamentar) no meu [github](https://github.com/dfalbel).
 
-Neste repositório é possível encontrar uma base de os dados relativa aos gastos parlamentares registrados na Câmara dos Deputados. Esses dados são disnibilizados *abertamente* no [site do câmara](http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar). Digo *abertamente* pois, o formato disponibilizado (xml), apesar de completo, é longe de ser o ideal para fazer alguma análise.
+Neste repositório é possível encontrar uma base de os dados relativa aos gastos parlamentares registrados na Câmara dos Deputados. Esses dados são disponibilizados *abertamente* no [site do câmara](http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar). Digo *abertamente* pois, o formato disponibilizado (xml), apesar de completo, é longe de ser o ideal para fazer alguma análise.
 
 Portanto, o que está no meu repositório, é o banco de dados *parseado* e em csv, em formato de colunas. 
 
