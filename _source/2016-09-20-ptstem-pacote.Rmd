@@ -1,0 +1,71 @@
+---
+layout: post
+title: 'Pacote ptstem'
+date : 2016-09-30
+tags: [text-mining, r]
+--- 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+No [meu github](https://github.com/dfalbel/) você pode encontrar o pacote [`ptstem`](https://github.com/dfalbel/ptstem).
+
+Esse pacote unifica a API de uso de três algoritmos de stemming para a língua 
+portuguesa disponíveis no R.
+
+## Instalando
+
+Você pode instalar direto do [github](https://github.com/dfalbel/ptstem) com o seguinte
+comando:
+
+```{r, eval = F}
+devtools::install_github("dfalbel/ptstem")
+```
+
+ou pelo [CRAN](https://cran.r-project.org/package=ptstem)
+
+```{r, eval=FALSE}
+install.packages("ptstem")
+```
+
+## Usando
+
+Considere o seguinte texto, extraído artigo [*Stemming* da Wikipedia](https://pt.wikipedia.org/wiki/Stemiza%C3%A7%C3%A3o)
+
+```{r}
+text <- "Em morfologia linguística e recuperação de informação a stemização (do inglês, stemming) é
+o processo de reduzir palavras flexionadas (ou às vezes derivadas) ao seu tronco (stem), base ou
+raiz, geralmente uma forma da palavra escrita. O tronco não precisa ser idêntico à raiz morfológica
+da palavra; ele geralmente é suficiente que palavras relacionadas sejam mapeadas para o mesmo
+tronco, mesmo se este tronco não for ele próprio uma raiz válida. O estudo de algoritmos para
+stemização tem sido realizado em ciência da computação desde a década de 60. Vários motores de
+buscas tratam palavras com o mesmo tronco como sinônimos como um tipo de expansão de consulta, em
+um processo de combinação."
+```
+
+O seguinte código usa o pacote [`rslp`](https://github.com/dfalbel/rslp) para afzer o stemming do texto.
+
+```{r}
+library(ptstem)
+ptstem(text, algorithm = "rslp", complete = FALSE)
+```
+
+Você pode completar as palavras que foram *stemizadas* usando o argumento `complete = T`.
+
+```{r, eval = F}
+ptstem(text, algorithm = "rslp", complete = TRUE)
+```
+
+Os outros algoritmos implementados são:
+
+* hunspell: o mesmo algoritmo usado no corretor do OpenOffice. (disponível via [hunspell](https://github.com/ropensci/hunspell) package)
+* porter: disponível pelo pacote SnowballC.
+
+Você pode trocar o algoritmo utilziado por meio do argumento `algorithm` da função `ptstem`:
+
+```{r}
+library(ptstem)
+ptstem(text, algorithm = "hunspell")
+ptstem(text, algorithm = "porter")
+```
