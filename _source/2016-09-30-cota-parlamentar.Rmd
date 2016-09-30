@@ -1,0 +1,57 @@
+---
+layout: post
+title: 'Uso da cota parlamentar'
+date : 2016-09-30
+tags: [r]
+--- 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Na semana passa adicionei o repositório [cota-parlamentar](https://github.com/dfalbel/cota-parlamentar) no meu [github](https://github.com/dfalbel).
+
+Neste repositório é possível encontrar uma base de os dados relativa aos gastos parlamentares registrados na Câmara dos Deputados. Esses dados são disnibilizados *abertamente* no [site do câmara](http://www2.camara.leg.br/transparencia/cota-para-exercicio-da-atividade-parlamentar/dados-abertos-cota-parlamentar). Digo *abertamente* pois, o formato disponibilizado (xml), apesar de completo, é longe de ser o ideal para fazer alguma análise.
+
+Portanto, o que está no meu repositório, é o banco de dados *parseado* e em csv, em formato de colunas. 
+
+## Ler
+
+Os dados têm 48MB e podem ser lidos tranquilamente no R da seguinte forma:
+
+```{r, message=FALSE, warning=FALSE}
+dados <- readr::read_csv("https://github.com/dfalbel/cota-parlamentar/blob/master/data/cota-parlamentar-2016.csv?raw=true")
+```
+
+
+## Análise mais simples
+
+Deputados que mais gastaram em 2016:
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+dados %>%
+  group_by(txNomeParlamentar, sgPartido) %>%
+  summarise(vlrLiquido = sum(vlrLiquido, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(desc(vlrLiquido)) %>%
+  slice(1:10)
+```
+
+Deputados que menos gastaram em 2016:
+
+```{r}
+dados %>%
+  group_by(txNomeParlamentar, sgPartido) %>%
+  summarise(vlrLiquido = sum(vlrLiquido, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(vlrLiquido) %>%
+  slice(1:10)
+```
+
+## Próximos passos
+
+* No site são disponibilizados arquivos de diversos anos. No repositório, só disponibilizei o arquivo do ano de 2016.
+* Esses dados são atualizados diariamente. Ainda não tive tempo de criar uma rotina de atualização automática.
+* Ainda vou fazer mais posts de análises desse banco de dados.
+
