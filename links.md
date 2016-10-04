@@ -17,3 +17,5 @@ Lista de blogs e sites que eu gosto de ler. Em constante atualização.
 - [FastML](http://fastml.com/)
 - [Revolutions](http://blog.revolutionanalytics.com/)
 - [otoro](http://blog.otoro.net/)
+- [RWeekly](https://rweekly.org/)
+
