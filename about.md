@@ -11,6 +11,7 @@ Sou bacharel em Estatística no IME-USP. Cientista de Dados na [Markedata](http:
 
 --------------------
 
+
 Este site usa:
 
 * o [AddThis](http://www.addthis.com/) para fazer recomendação de conteúdo. Leia [aqui](http://www.addthis.com/privacy/privacy-policy) a *privacy policy*.
