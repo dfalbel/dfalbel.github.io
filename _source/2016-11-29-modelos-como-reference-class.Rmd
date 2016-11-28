@@ -1,0 +1,62 @@
+---
+layout: post
+title: 'Definindo um modelo estatístico como uma classe R6'
+date : 2016-11-29
+tags: [r]
+--- 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Este post tenta definir uma ideia, mais teórica do que prática, de como definir um
+modelo estatístico de forma organizada e reproduzível em uma linguagem de computador.
+Como este blog é sobre R, vamos usar o próprio R.
+
+Essa ideia ainda não está pronta, talvez nunca fique pronta também, mas decidi 
+escrevê-la para facilitar o raciocínio.
+
+Suponha um modelo de regressão linear, do tipo mais simples. No R ajustamos este
+modelo da seguinte forma.
+
+```{r}
+library(tidyverse)
+df <- data_frame(
+  x = rnorm(100),
+  y = 2*x + runif(100, -.5, .5)
+)
+reg <- lm(y ~ x, data = df)
+```
+
+Com o modelo ajustado, você pode usar a função `predict` para prever novas 
+observações usando este modelo.
+
+```{r}
+predict(reg, newdata = data_frame(x = rnorm(100)))
+```
+
+Essa forma usa o classes de um tipo de OO chamado S3. Esse método é, de longe, o mais utilizado dentro do R. Praticamente todas as funções simples que você já usou
+são métodos S3. Veja por exemplo o código da função `predict`:
+
+```{r}
+predict
+```
+
+Esse `UseMethod("predict")` está dizendo: "use o método `predict` para a classe
+do objeto que está sendo predito".
+
+O problema desta abordagem surge quando você está tentando definir uma API única
+para acessar e ajustar diversos tipos diferentes de modelos estatísticos como fazem o
+`caret` e o `mlr`. 
+
+No `caret`, uma única função `train` é usada para treinar os modelos. O modelo
+é escolhido por meio do parâmetro `method` e passamos os hiperparâmetros do 
+algoritmo pelo parâmetro `tuneGrid`.
+
+
+
+
+
+
+
+
