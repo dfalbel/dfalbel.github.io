@@ -145,27 +145,42 @@ classif_lda <- R6Class("classif_lda",
     },
     
     fit = function(X, Y) {
-      
-      return(
-        append(
-          as.list(self),
-          fit = MASS::lda(
-            x = X, grouping = Y, 
-            method = self$method, nu = self$nu,
-            tol = self$tol, CV = self$CV
-          )
-        )
+      MASS::lda(
+        x = X, grouping = Y, method = self$method, nu = self$nu,
+        tol = self$tol, CV = self$CV
       )
-    }
+    },
     
-    predict = function(X) {
-      
+    predict = function(X, fit) {
+      p <- predict(fit, newdata = X, method = self$predict.method)
+      p$posterior
     }
     
   )
 )
 ```
 
+* Todos os parâmetros são declarados com o valor `NULL`. 
+* O método de inicialização estabelece alguns `defaults` para os parâmetros, mas
+permite especificar todos eles.
+* Definimos um método `fit` que retorna o modelo ajustado usando os parâmetros 
+definidos na inicialização do modelo. Esse método recebe como argumentos uma matriz
+X com as covariáveis e um vetor/matriz Y com a resposta.
+* Definimos um método `predict` que retorna a predição. Esse método usa os argumentos
+definidos na inicialização do modelo e recebe ainda uma matriz X (que você deseja prever)
+e o modelo ajustado `fit`.
+
+Em seguida, funções genéricas podem ser utilizadas para ajustar qualquer modelo.
+Por exemplo:
+
+```{r}
+train <- function(X, Y, model) {
+  model$fit(X, Y)
+}
+```
+
+A função `train` poderia receber instruções mais complexas como fazer cross-validation,
+calcular algumas medidas de acerto, etc.
 
 
 
