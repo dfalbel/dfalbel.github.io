@@ -132,6 +132,8 @@ classif_lda <- R6Class("classif_lda",
     predict.method = NULL,
     CV = NULL,
     
+    fitted_model = NULL,
+    
     initialize = function(
       method = "moment", nu = NULL, tol = 1e-4, 
       predict.method = "plug-in", CV = FALSE
@@ -151,11 +153,10 @@ classif_lda <- R6Class("classif_lda",
       )
     },
     
-    predict = function(X, fit) {
-      p <- predict(fit, newdata = X, method = self$predict.method)
+    predict = function(X) {
+      p <- predict(self$fitted_model, newdata = X, method = self$predict.method)
       p$posterior
     }
-    
   )
 )
 ```
@@ -175,12 +176,39 @@ Por exemplo:
 
 ```{r}
 train <- function(X, Y, model) {
-  model$fit(X, Y)
+  m <- model$clone()
+  m$fitted_model <- m$fit(X, Y)
+  return(m)
 }
 ```
 
-A função `train` poderia receber instruções mais complexas como fazer cross-validation,
-calcular algumas medidas de acerto, etc.
+A função `train` poderia receber instruções mais complexas para fazer cross-validation,
+calcular algumas medidas de acerto, fazer alguns pre-processamentos na base. 
+Além disso, `train` poderia ter interfaces para fórmulas e especificação dos dados.
+
+```{r}
+model <- classif_lda$new()
+fit <- train(X, Y, model)
+```
+
+Também é possível adicionar uma função geral de *scoragem* do modelo por exemplo.
+
+```{r}
+score <- function(fit, X){
+  fit$predict(X)
+}
+```
+
+```{r}
+score(fit, X)
+```
+
+Essa função `score` em um contexto mais geral, pode definir diversas formas de escoragem,
+como por exemplo: retornar apenas a classe ou uma matriz com as probabilidades.
+
+
+
+
 
 
 
