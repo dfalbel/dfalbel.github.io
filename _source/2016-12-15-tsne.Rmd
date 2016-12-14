@@ -35,31 +35,31 @@ O t-SNE é baseado no SNE com duas principais diferenças:
 
 Em primeiro lugar, o t-SNE converte a matriz de distâncias euclidianas nos espaço de 
 maior dimensão em probabilidades
-condicionais que representam similaridades. A similaridade entre dois pontos $x_i$ e 
-$x_j$ é a probabilidade condicional $p_{j|i}$ de $x_i$ pegar $x_j$ como seu vizinho
+condicionais que representam similaridades. A similaridade entre dois pontos $$x_i$$ e 
+$$x_j$$ é a probabilidade condicional $$p_{j|i}$$ de $$x_i$$ pegar $$x_j$$ como seu vizinho
 se os vizinhos fossem escolhidos em proporção à densidade de uma distribuição Normal 
-com média em $x_i$.
+com média em $$x_i$$.
 
-Para pontos próximos, $p_{j|i}$ é relativamente alta e para pontos distantes $p_{j|i}$
-será muito pequena (para valores rasoáveis da variância $\sigma_i$ da Normal escolhida).
+Para pontos próximos, $$p_{j|i}$$ é relativamente alta e para pontos distantes $$p_{j|i}$$
+será muito pequena (para valores rasoáveis da variância $$\sigma_i$$ da Normal escolhida).
 
 Essa matriz não é simétrica e isso causa problemas, principalmente na presença de 
 outliers. Para corrigir isso, o t-SNE simplesmente transforma a matriz de probabilidades
-condicionais em uma matriz de probabilidades conjuntas, definindo $p_{ij} = \frac{p_{j|i} + p_{i|j}}{2n}$
+condicionais em uma matriz de probabilidades conjuntas, definindo $$p_{ij} = \frac{p_{j|i} + p_{i|j}}{2n}$$
 
-Em seguida, considere $y_i$ a representação num espaço de menor dimensão de $x_i$.
-Queremos que a matriz de similaridades entre $y_i$ e $y_j$ seja a mais parecida possível
-das smimilaridades entre $x_i$ e $x_j$.
+Em seguida, considere $$y_i$$ a representação num espaço de menor dimensão de $x_i$.
+Queremos que a matriz de similaridades entre $$y_i$$ e $$y_j$$ seja a mais parecida possível
+das smimilaridades entre $$x_i$$ e $$x_j$$.
 
-Agora as similaridades entre $y_i$ e $y_j$ são definidas pela probabilidade de $y_j$ ter $y_i$
+Agora as similaridades entre $$y_i$$ e $$y_j$$ são definidas pela probabilidade de $$y_j$$ ter $$y_i$$
 como vizinho se os vizinhos fossem escolhidos proporcionalmente à densidade de uma distribuição
-t de Student com 1 grau de liberdade (equivalente a à distribuição Cauchy) com centro em $y_i$.
+t de Student com 1 grau de liberdade (equivalente a à distribuição Cauchy) com centro em $$y_i$$.
 
-O objetivo do t-SNE é que $q_ij$ seja o mais parecido possível com $p_ij$. Para 
+O objetivo do t-SNE é que $$q_ij$$ seja o mais parecido possível com $$p_ij$$. Para 
 isso, ele define uma função de custo (no caso a divergência de Kullback-Leibler)
 e a minimiza usando o método do gradiente.
 
-Para completar o problema, fica faltando apenas definir o valor de $\sigma_i$, variância
+Para completar o problema, fica faltando apenas definir o valor de $$\sigma_i$$, variância
 da distribuição Normal utilizada para calcular as similaridades no espaço de maior
 dimensão. Essa variância é definida a partir de um hiper-parâmetro da técnica, chamado de 
 perplexidade, que pode ser interpretado pela quantidade de vizinhos muito próximos que 
@@ -105,7 +105,7 @@ Quase tudo que eu escrevi aqui pode ser encontrado nos seguintes links:
 - [Effective t-SNE](http://distill.pub/2016/misread-tsne/)
 - [Tutorial t-SNE e links diretos](https://github.com/oreillymedia/t-SNE-tutorial)
 
-Outros lugares com usos interessantes
+Outros lugares com usos interessantes:
 
 - [Blog de pesquisa do Google](https://research.googleblog.com/2016/12/open-sourcing-embedding-projector-tool.html)
 
