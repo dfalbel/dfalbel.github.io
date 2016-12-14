@@ -84,21 +84,33 @@ tsne <- Rtsne(as.matrix(iris_unicos[,1:4]), perplexity = 30) # Run TSNE
 qplot(tsne$Y[,1], tsne$Y[,2], geom = "point", colour = iris_unicos$Species) # Plot the result
 ```
 
-Compare isso à redução feita pelo PCA (componentes principais)
+Essa é uma aplicação bem simples. No próximo post irei aplicar o t-SNE em bancos
+de dados mais interessantes. Por enquanto, mostro aqui alguns exemplos de visualizações
+obtidas por outras pessoas.
 
-```{r}
-pca_iris = princomp(iris[,1:4])$scores[,1:2]
-qplot(pca_iris[,1], pca_iris[,2], geom = "point", colour = iris$Species)
-```
+Abaixo, a visualização do [banco de dados MNIST](http://yann.lecun.com/exdb/mnist/)
 
+![mnist](https://lvdmaaten.github.io/tsne/examples/mnist_tsne.jpg)
 
+A técninca funcionou muito bem também no [http://qwone.com/~jason/20Newsgroups/](http://qwone.com/~jason/20Newsgroups/)
 
+![20news](https://lvdmaaten.github.io/tsne/examples/20news_tsne.jpg)
 
+# Referências
 
+Quase tudo que eu escrevi aqui pode ser encontrado nos seguintes links:
 
+- [Site do t-SNE](https://lvdmaaten.github.io/tsne/)
+- [Artigo do t-SNE](https://lvdmaaten.github.io/publications/papers/JMLR_2008.pdf)
+- [Effective t-SNE](http://distill.pub/2016/misread-tsne/)
+- [Tutorial t-SNE e links diretos](https://github.com/oreillymedia/t-SNE-tutorial)
 
+Outros lugares com usos interessantes
 
+- [Blog de pesquisa do Google](https://research.googleblog.com/2016/12/open-sourcing-embedding-projector-tool.html)
 
+Inclusive, você pode fazer quantos você quiser usando o novo [http://projector.tensorflow.org/](http://projector.tensorflow.org/).
 
-
-
+Além de visualizações essa técnica tem sido bastante utilizada como *feature engneering* em 
+copetições de machine learning. No [Numerai](https://numer.ai/), por exemplo, é responsável 
+por melhorar bastante os resultados.
