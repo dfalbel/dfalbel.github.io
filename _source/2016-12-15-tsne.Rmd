@@ -1,7 +1,7 @@
 ---
 layout: post
-title: 'Definindo um modelo estatístico como uma classe R6'
-date : 2016-11-29
+title: 't-SNE'
+date : 2016-12-15
 tags: [r]
 --- 
 
@@ -9,202 +9,87 @@ tags: [r]
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Este post tenta definir uma ideia, mais teórica do que prática, de como definir um
-modelo estatístico de forma organizada e reproduzível em uma linguagem de computador.
-Como este blog é sobre R, vamos usar o próprio R.
+t-SNE: t-Distributed Stochastic Neighbor Embedding é uma técnica de [redução de dimensionalidade](https://en.wikipedia.org/wiki/Dimensionality_reduction) que é 
+particularmente bem adaptada para visualizar bancos de dados com muitas dimensões.
 
-Essa ideia ainda não está pronta, talvez nunca fique pronta também, mas decidi 
-escrevê-la para facilitar o raciocínio.
+A [técnica foi introduzida](https://lvdmaaten.github.io/publications/papers/JMLR_2008.pdf) em 2008 por Laurens van der Maaten e Geoffrey Hinton,
+o segundo bem famoso por causa do seu trabalho com redes neurais. Hinton é um dos 
+primeiros pesquisadores a treinar redes neurais de muitas camadas usando backpropagation. 
 
-Suponha um modelo de regressão linear, do tipo mais simples. No R ajustamos este
-modelo da seguinte forma.
+O objetivo do t-SNE é a partir de um conjunto de pontos em um espaço multi-dimensional
+encontrar uma representação fiel desses pontos em um espaço de dimensão menor, 
+geralmente um plano 2D. O algoritmo é não-linear e se adapta aos dados, realizando 
+diferentes transformações em diferentes regiões do espaço multi-dimensional. O 
+t-SNE é capaz de capturar muito da estrutura local do espaço multi-dimensional enquanto 
+também revela a estrutura global do banco de dados como a presença de *clusters*.
 
-```{r, message=FALSE}
-library(tidyverse)
-df <- data_frame(
-  x = rnorm(100),
-  y = 2*x + runif(100, -.5, .5)
-)
-reg <- lm(y ~ x, data = df)
-```
+Neste post vamos tentar definir matematicamente (não muito rigorosamente) o que é
+o t-SNE para depois mostrar algumas aplicações usando o R.
 
-Com o modelo ajustado, você pode usar a função `predict` para prever novas 
-observações usando este modelo.
+# Definindo melhor matemáticamente
 
-```{r, eval=FALSE}
-predict(reg, newdata = data_frame(x = rnorm(100)))
-```
+O t-SNE é baseado no SNE com duas principais diferenças:
 
-Essa forma usa o classes de um tipo de OO chamado S3. Esse método é, de longe, o mais utilizado dentro do R. Praticamente todas as funções simples que você já usou
-são métodos S3. Veja por exemplo o código da função `predict`:
+- usa uma função de custo simétrica que é mais fácil de otimizar
+- usa a distribuição **t** ao invés da distribuição Normal para calcular a similaridade entre os pontos no espaço de dimensão menor, o que também ajuda na otimização e no chamado *crowding problem*.
 
-```{r}
-predict
-```
+Em primeiro lugar, o t-SNE converte a matriz de distâncias euclidianas nos espaço de 
+maior dimensão em probabilidades
+condicionais que representam similaridades. A similaridade entre dois pontos $x_i$ e 
+$x_j$ é a probabilidade condicional $p_{j|i}$ de $x_i$ pegar $x_j$ como seu vizinho
+se os vizinhos fossem escolhidos em proporção à densidade de uma distribuição Normal 
+com média em $x_i$.
 
-Esse `UseMethod("predict")` está dizendo: "use o método `predict` para a classe
-do objeto que está sendo predito".
+Para pontos próximos, $p_{j|i}$ é relativamente alta e para pontos distantes $p_{j|i}$
+será muito pequena (para valores rasoáveis da variância $\sigma_i$ da Normal escolhida).
 
-O problema desta abordagem surge quando você está tentando definir uma API única
-para acessar e ajustar diversos tipos diferentes de modelos estatísticos como fazem o
-`caret` e o `mlr`. 
+Essa matriz não é simétrica e isso causa problemas, principalmente na presença de 
+outliers. Para corrigir isso, o t-SNE simplesmente transforma a matriz de probabilidades
+condicionais em uma matriz de probabilidades conjuntas, definindo $p_{ij} = \frac{p_{j|i} + p_{i|j}}{2n}$
 
-No `caret`, uma única função `train` é usada para treinar os modelos. O modelo
-é escolhido por meio do parâmetro `method` e passamos os hiperparâmetros do 
-algoritmo pelo parâmetro `tuneGrid`. Se nenhum argumento é passado para o `tuneGrid`
-o `caret` usa um grid de parâmetros pré-estabelecidos.
-As desvantagens desta abordagem são:
+Em seguida, considere $y_i$ a representação num espaço de menor dimensão de $x_i$.
+Queremos que a matriz de similaridades entre $y_i$ e $y_j$ seja a mais parecida possível
+das smimilaridades entre $x_i$ e $x_j$.
 
-* Não fica claro quais são os valores dos hiperparâmetros que serão utilizados.
-* Não é possível fazer _autocompletion_ dos nomes dos parâmetros. (Apesar de parecer simples, isso aumenta muito a produtividade.)
+Agora as similaridades entre $y_i$ e $y_j$ são definidas pela probabilidade de $y_j$ ter $y_i$
+como vizinho se os vizinhos fossem escolhidos proporcionalmente à densidade de uma distribuição
+t de Student com 1 grau de liberdade (equivalente a à distribuição Cauchy) com centro em $y_i$.
 
-A outra abordagem bastante conhecida é a utilizada pelo pacote `mlr`. O `mlr` define
-algumas classes importantes como a [`Learner`](https://www.rdocumentation.org/packages/mlr/versions/2.9/topics/makeLearner?)
-a [`Task`](https://rdrr.io/cran/mlr/man/Task.html). Um `Learner` é próximo do que
-acredito ser uma boa definição de um modelo estatístico, no entanto, ele tem as seguintes
-desvantagens:
+O objetivo do t-SNE é que $q_ij$ seja o mais parecido possível com $p_ij$. Para 
+isso, ele define uma função de custo (no caso a divergência de Kullback-Leibler)
+e a minimiza usando o método do gradiente.
 
-* Os argumentos são passados por meio de uma lista pelo parâmetro `par.vals` ou
-por meio de  elipses (`...`), por isso não é possível usar _autocompletion_.
-* Por não ser um parâmetro explicito de uma função, esses parâmetros acabam ficando
-muito mal documentados, apesar do `mlr` incentivar a documentação. Se os parâmetros
-fossem parâmetros de função, seriam obrigatoriamente documentados para que o pacote
-pudesse ser publicado no CRAN.
+Para completar o problema, fica faltando apenas definir o valor de $\sigma_i$, variância
+da distribuição Normal utilizada para calcular as similaridades no espaço de maior
+dimensão. Essa variância é definida a partir de um hiper-parâmetro da técnica, chamado de 
+perplexidade, que pode ser interpretado pela quantidade de vizinhos muito próximos que 
+cada ponto tem. Esse parâmetro balanceia a *atenção* do modelo pelos aspectos locais da
+estrutura dos dados e pelos aspectos mais globais.
 
-O `mlr` apesar de possuir uma definição relativamente formal de classes, utiliza
-classes do tipo S3. Veja [aqui](https://mlr-org.github.io/mlr-tutorial/devel/html/create_learner/index.html)
-como define-se um modelo dentro do `mlr`. 
+Claro que toda essa explciação foi feita por alguém que não entende tanto do assunto, para se
+aprofundar, vale a pena ler com calma o [artigo original](https://lvdmaaten.github.io/publications/papers/JMLR_2008.pdf) da técnica.
 
-Primeiro define-se uma função que cria o `Learner`:
+# Aplicação
 
-```{r eval = FALSE}
-makeRLearner.classif.lda = function() {
-  makeRLearnerClassif(
-    cl = "classif.lda",
-    package = "MASS",
-    par.set = makeParamSet(
-      makeDiscreteLearnerParam(id = "method", default = "moment", values = c("moment", "mle", "mve", "t")),
-      makeNumericLearnerParam(id = "nu", lower = 2, requires = quote(method == "t")),
-      makeNumericLearnerParam(id = "tol", default = 1e-4, lower = 0),
-      makeDiscreteLearnerParam(id = "predict.method", values = c("plug-in", "predictive", "debiased"),
-        default = "plug-in", when = "predict"),
-      makeLogicalLearnerParam(id = "CV", default = FALSE, tunable = FALSE)
-    ),
-    properties = c("twoclass", "multiclass", "numerics", "factors", "prob"),
-    name = "Linear Discriminant Analysis",
-    short.name = "lda",
-    note = "Learner param 'predict.method' maps to 'method' in predict.lda."
-  )
-}
-```
+No R existem dois pacotes que podem ser usados para o t-SNE:
 
-Em seguida definem-se duas funções: uma para treinar o classificador e outra para
-prever novos valores:
-
-```{r, eval=FALSE}
-trainLearner.classif.lda = function(.learner, .task, .subset, .weights = NULL, ...) {
-  f = getTaskFormula(.task)
-  MASS::lda(f, data = getTaskData(.task, .subset), ...)
-}
-```
+- [`tsne`](https://cran.r-project.org/web/packages/tsne/): Em puro R, mais lento
+- [`Rtsne`](https://github.com/jkrijthe/Rtsne) wrapper de um código em C++ (otimizado)
 
 ```{r}
-predictLearner.classif.lda = function(.learner, .model, .newdata, predict.method = "plug-in", ...) {
-  p = predict(.model$learner.model, newdata = .newdata, method = predict.method, ...)
-  if (.learner$predict.type == "response") 
-    return(p$class) else return(p$posterior)
-}
+library(Rtsne)
+library(ggplot2) 
+iris_unicos <- unique(iris)
+tsne <- Rtsne(as.matrix(iris_unicos[,1:4]), perplexity = 30) # Run TSNE
+qplot(tsne$Y[,1], tsne$Y[,2], geom = "point", colour = iris_unicos$Species) # Plot the result
 ```
 
-Essa estrutura é bem interessante. É intuitiva e parece ser bem formal. 
-Chego aqui na motivação de se definir um modelo usando classes R6. A sugestão é, 
-por exemplo, para a análise discriminante linear, definí-la da seguinte forma:
+Compare isso à redução feita pelo PCA (componentes principais)
 
 ```{r}
-library(R6)
-
-classif_lda <- R6Class("classif_lda",
-  public = list(
-    
-    method = NULL,
-    nu = NULL,
-    tol = NULL,
-    predict.method = NULL,
-    CV = NULL,
-    
-    fitted_model = NULL,
-    
-    initialize = function(
-      method = "moment", nu = NULL, tol = 1e-4, 
-      predict.method = "plug-in", CV = FALSE
-    ) {
-      self$method <- method
-      self$nu <- if(method == "t") nu else NULL
-      self$tol <- tol
-      self$predict.method <- predict.method
-      self$CV <- CV
-      return(self)
-    },
-    
-    fit = function(X, Y) {
-      MASS::lda(
-        x = X, grouping = Y, method = self$method, nu = self$nu,
-        tol = self$tol, CV = self$CV
-      )
-    },
-    
-    predict = function(X) {
-      p <- predict(self$fitted_model, newdata = X, method = self$predict.method)
-      p$posterior
-    }
-  )
-)
+pca_iris = princomp(iris[,1:4])$scores[,1:2]
+qplot(pca_iris[,1], pca_iris[,2], geom = "point", colour = iris$Species)
 ```
-
-* Todos os parâmetros são declarados com o valor `NULL`. 
-* O método de inicialização estabelece alguns `defaults` para os parâmetros, mas
-permite especificar todos eles.
-* Definimos um método `fit` que retorna o modelo ajustado usando os parâmetros 
-definidos na inicialização do modelo. Esse método recebe como argumentos uma matriz
-X com as covariáveis e um vetor/matriz Y com a resposta.
-* Definimos um método `predict` que retorna a predição. Esse método usa os argumentos
-definidos na inicialização do modelo e recebe ainda uma matriz X (que você deseja prever)
-e o modelo ajustado `fit`.
-
-Em seguida, funções genéricas podem ser utilizadas para ajustar qualquer modelo.
-Por exemplo:
-
-```{r}
-train <- function(X, Y, model) {
-  m <- model$clone()
-  m$fitted_model <- m$fit(X, Y)
-  return(m)
-}
-```
-
-A função `train` poderia receber instruções mais complexas para fazer cross-validation,
-calcular algumas medidas de acerto, fazer alguns pre-processamentos na base. 
-Além disso, `train` poderia ter interfaces para fórmulas e especificação dos dados.
-
-```{r}
-model <- classif_lda$new()
-fit <- train(X, Y, model)
-```
-
-Também é possível adicionar uma função geral de *scoragem* do modelo por exemplo.
-
-```{r}
-score <- function(fit, X){
-  fit$predict(X)
-}
-```
-
-```{r}
-score(fit, X)
-```
-
-Essa função `score` em um contexto mais geral, pode definir diversas formas de escoragem,
-como por exemplo: retornar apenas a classe ou uma matriz com as probabilidades.
 
 
 
