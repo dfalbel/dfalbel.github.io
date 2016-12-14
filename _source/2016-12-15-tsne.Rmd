@@ -9,6 +9,10 @@ tags: [r]
 knitr::opts_chunk$set(echo = TRUE)  
 ```
 
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
 t-SNE: t-Distributed Stochastic Neighbor Embedding é uma técnica de [redução de dimensionalidade](https://en.wikipedia.org/wiki/Dimensionality_reduction) que é 
 particularmente bem adaptada para visualizar bancos de dados com muitas dimensões.
 
