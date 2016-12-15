@@ -32,9 +32,9 @@ devtools::install_github("dfalbel/folhar")
 
 Você pode fazer uma busca pelo termo *estatistica*, por exemplo:
 
-```{r}
+```{r eval = FALSE}
 library(folhar)
-busca <- folha_buscar("estatistica", "01/11/2016", "30/11/2016")
+busca <- folha_buscar("estatistica", "01/11/2016", "30/11/2016") 
 ```
 
 Veja que `busca` é um data.frame com todas as variáveis:
@@ -53,7 +53,7 @@ As possíveis notícias são as com url iniciado em:
 
 Por exemplo, para uma notícia com a URL: "http://www1.folha.uol.com.br/poder/2016/11/1836519-pacote-de-dez-medidas-atinge-os-mais-pobres-diz-defensoria-do-rio.shtml" pode-se usar a função `folha_noticias` para obter mais detalhes.
 
-```{r}
+```{r eval = FALSE}
 url <- "http://www1.folha.uol.com.br/poder/2016/11/1836519-pacote-de-dez-medidas-atinge-os-mais-pobres-diz-defensoria-do-rio.shtml"
 noticia <- folha_noticias(url)
 ```

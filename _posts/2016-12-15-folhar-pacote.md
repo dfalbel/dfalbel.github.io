@@ -34,13 +34,7 @@ Você pode fazer uma busca pelo termo *estatistica*, por exemplo:
 
 {% highlight r %}
 library(folhar)
-busca <- folha_buscar("estatistica", "01/11/2016", "30/11/2016")
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in as.vector(x, "list"): cannot coerce type 'environment' to vector of type 'list'
+busca <- folha_buscar("estatistica", "01/11/2016", "30/11/2016") 
 {% endhighlight %}
 
 Veja que `busca` é um data.frame com todas as variáveis:
