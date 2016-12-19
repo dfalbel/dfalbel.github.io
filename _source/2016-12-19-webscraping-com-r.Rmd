@@ -1,0 +1,36 @@
+---
+layout: post
+title: 'Webscraping com R'
+date : 2016-12-19
+tags: [r]
+--- 
+
+# Introdução
+
+Webscarping é uma técnica utilizada para obter dados provenientes de sites da
+internet. Usa-se webscraping quando é necessário obter informações que não estão 
+disponíveis em um banco de dados público, mas que podem ser obtidas por meio de uma
+página da web. 
+
+Geralmente páginas da internet podem ser considerados dados semi-estruturados, ou seja,
+esses dados possuem uma estrutura relativamente bem definida, no entanto a estrutura é longe 
+de ser a ideal para fazer análises. Webscraping transforma essa informação semi-estruturada
+em informações que podem ser consideradas estruturadas.
+
+Para aprender a fazer webscrapping é necessário entender um pouco do protocolo
+HTTP e como funcionam requisições desse tipo e também a estrutura de arquivos html
+e sua relação com arquivos css.
+
+Neste post vamos falar sobre webscraping separando nessas duas partes:
+
+- Como obter a página web
+- Como obter os dados que estão na página web obtida
+
+Com o que falaremos aqui, será possível fazer webscrapping de grande parte dos sites
+da internet, no entanto, não trataremos aqui de webscraping de sites que possuem 
+muitas informações carregadas em *client-side* via javascript pois, neste caso, 
+a abordagem precisa ser mais complexa, as vezes envolvendo a emulação de um browser.
+
+
+
+
