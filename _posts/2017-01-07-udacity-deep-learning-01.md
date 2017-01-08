@@ -14,7 +14,7 @@ no blog. O primeiro exercício, pouco tem a ver com Deep Learning, na verdade a
 tarefa é organizar todas as imagens disponibilizadas [aqui](http://yaroslavvb.blogspot.com.br/2011/09/notmnist-dataset.html).
 Esse conjunto de dados é chamado notMINIST.
 
-![](../images/nmn.png)
+![](/images/nmn.png)
 
 Vamos lá!
 
