@@ -78,8 +78,8 @@ ou `matrix`s mas como neste caso, os dados são imagens, faz mais sentido repres
 dessa forma.
 
 Note que criamos a função `pre_process` que deixa a imagem na forma que queremos 
-guardá-la no R. Como algumas imagens estão com problema e não podem ser ldias, 
-fizemos com que essa função tivesse
+guardá-la no R. Como algumas imagens estão com problema e não podem ser lidas, 
+fizemos com que essa função fosse tolerante a erros usando a função `failwith`.
 
 ```{r, eval = FALSE}
 set.seed(88320)
@@ -122,7 +122,7 @@ test_data <- readRDS('test_dataset.rds')
 
 Esse trecho de código leva cerca de 2h para terminar de rodar no meu computador
 (MacBook Air 4GB RAM). Se no seu computador não rodar, você sempre pode diminuir 
-o tamanho da amostra utlizada.
+o tamanho da amostra utilizada.
 
 No final desse processo você terá dois arquivos `.rds`. Cada um deles é um array
 3-dimensional. As labels estão guardadas nas dimensões do array.
