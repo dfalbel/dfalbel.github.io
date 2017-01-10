@@ -57,7 +57,7 @@ x <- tf$placeholder(tf$float32, shape = shape(NULL, 784L)) # 784 é o número de
 y <- tf$placeholder(tf$float32, shape = shape(NULL, 10L)) # 10 é o número de classes distintas
 
 # definir o modelo
-logits <- tf$contrib$layers$fully_connected(x, 10L, activation_fn = NULL)
+logits <- tf$contrib$layers$linear(x, 10L)
 y_ <- tf$nn$softmax(logits)
 
 # definir a função de perda
@@ -128,6 +128,8 @@ for(step in 1:n_steps){
   }
   
   indices <- sample(indices_possiveis, batch_size)
+  indices_possiveis <- indices_possiveis[! indices_possiveis %in% indices]
+  
   batch_x <- train_x[indices,]
   batch_y <- train_y[indices,]
   result <- session$run(list(loss, train_step), feed_dict = dict(x = batch_x, y = batch_y))
@@ -143,16 +145,16 @@ for(step in 1:n_steps){
 
 
 {% highlight text %}
-## Step: 1000 Loss: 0.79956 
-## Step: 2000 Loss: 0.75476 
-## Step: 3000 Loss: 0.73068 
-## Step: 4000 Loss: 0.71484 
-## Step: 5000 Loss: 0.70451 
-## Step: 6000 Loss: 0.69381 
-## Step: 7000 Loss: 0.68457 
-## Step: 8000 Loss: 0.67632 
-## Step: 9000 Loss: 0.66896 
-## Step: 10000 Loss: 0.66369
+## Step: 1000 Loss: 1.47180 
+## Step: 2000 Loss: 1.41761 
+## Step: 3000 Loss: 1.39570 
+## Step: 4000 Loss: 1.38201 
+## Step: 5000 Loss: 1.37048 
+## Step: 6000 Loss: 1.36435 
+## Step: 7000 Loss: 1.36048 
+## Step: 8000 Loss: 1.35529 
+## Step: 9000 Loss: 1.34832 
+## Step: 10000 Loss: 1.34424
 {% endhighlight %}
 
 A seguir definimos uma função que calcula a acurácia e a calculamos para as bases
@@ -165,10 +167,10 @@ coluna é a mesma que possui o 1, na mariz de inputs verdadeiros.
 accuracy <- function(x_, y){
   pred <- session$run(y_, feed_dict = dict(x = x_)) %>% 
     apply(1, function(x) {
-      (1:10)[order(x)][1]
+      (1:10)[order(-x)][1]
     })
   real <- apply(y, 1, function(x) {
-    (1:10)[order(x)][1]
+    (1:10)[order(-x)][1]
   })
   sum(real == pred)/length(real)
 }
@@ -179,7 +181,7 @@ accuracy(train_x, train_y)
 
 
 {% highlight text %}
-## [1] 0.7928759
+## [1] 0.8083162
 {% endhighlight %}
 
 
@@ -191,11 +193,11 @@ accuracy(test_x, test_y)
 
 
 {% highlight text %}
-## [1] 0.784875
+## [1] 0.862743
 {% endhighlight %}
 
-O modelo de regressão logística foi treinado e está acertando 81% das imagens. Tanto na
-base de teste como na base de treino. 
+O modelo de regressão logística foi treinado e está acertando neste caso 80% das
+iamgens na base de treino e 86% na base de teste. Esse número pode variar um pouco.
 
 ## Hidden layer neural network
 
@@ -213,7 +215,7 @@ y <- tf$placeholder(tf$float32, shape = shape(NULL, 10L)) # 10 é o número de c
 
 # definir o modelo
 layer1 <- tf$contrib$layers$fully_connected(x, 1024L, activation_fn = tf$nn$relu) # só essa e a próxima linha mudam
-logits <- tf$contrib$layers$fully_connected(layer1, 10L)
+logits <- tf$contrib$layers$linear(layer1, 10L)
 y_ <- tf$nn$softmax(logits)
 
 # definir a função de perda
@@ -243,6 +245,8 @@ for(step in 1:n_steps){
   }
   
   indices <- sample(indices_possiveis, batch_size)
+  indices_possiveis <- indices_possiveis[! indices_possiveis %in% indices]
+  
   batch_x <- train_x[indices,]
   batch_y <- train_y[indices,]
   result <- session$run(list(loss, train_step), feed_dict = dict(x = batch_x, y = batch_y))
@@ -258,16 +262,16 @@ for(step in 1:n_steps){
 
 
 {% highlight text %}
-## Step: 1000 Loss: 1.97708 
-## Step: 2000 Loss: 1.78444 
-## Step: 3000 Loss: 1.71083 
-## Step: 4000 Loss: 1.66900 
-## Step: 5000 Loss: 1.64347 
-## Step: 6000 Loss: 1.62489 
-## Step: 7000 Loss: 1.61025 
-## Step: 8000 Loss: 1.59883 
-## Step: 9000 Loss: 1.58981 
-## Step: 10000 Loss: 1.58253
+## Step: 1000 Loss: 0.62297 
+## Step: 2000 Loss: 0.56271 
+## Step: 3000 Loss: 0.52699 
+## Step: 4000 Loss: 0.49942 
+## Step: 5000 Loss: 0.47542 
+## Step: 6000 Loss: 0.45846 
+## Step: 7000 Loss: 0.44240 
+## Step: 8000 Loss: 0.42757 
+## Step: 9000 Loss: 0.41236 
+## Step: 10000 Loss: 0.39926
 {% endhighlight %}
 
 Com a mesma função calculamos a acurácia do modelo.
@@ -280,7 +284,7 @@ accuracy(train_x, train_y)
 
 
 {% highlight text %}
-## [1] 0.9571691
+## [1] 0.9323186
 {% endhighlight %}
 
 
@@ -292,7 +296,7 @@ accuracy(test_x, test_y)
 
 
 {% highlight text %}
-## [1] 0.962775
+## [1] 0.9235206
 {% endhighlight %}
 
 O resultado agora foi de 90% das imagens classificadas corretamente! Se comparado
