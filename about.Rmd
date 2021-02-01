@@ -1,0 +1,15 @@
+---
+title: "About this blog"
+description: |
+  Some additional details about the blog
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Welcome to this blog. After quite some time daily writing R code, I decided to put this blog to keep up some notes and help me remembering details of implementations.
+
+Here I'll mostly talk about [torch for R](https://torch.mlverse.org) and the problems faced while implementing it.
+
+Hopefully it's helpful for others!

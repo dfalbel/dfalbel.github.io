@@ -1,0 +1,20 @@
+{
+  "articles": [
+    {
+      "path": "about.html",
+      "title": "About this blog",
+      "description": "Some additional details about the blog",
+      "author": [],
+      "contents": "\nWelcome to this blog. After quite some time daily writing R code, I decided to put this blog to keep up some notes and help me remembering details of implementations.\nHere I’ll mostly talk about torch for R and the problems faced while implementing it.\nHopefully it’s helpful for others!\n\n\n\n",
+      "last_modified": "2021-02-01T16:47:26-03:00"
+    },
+    {
+      "path": "index.html",
+      "title": "",
+      "author": [],
+      "contents": "\n\n\n\n",
+      "last_modified": "2021-02-01T16:48:05-03:00"
+    }
+  ],
+  "collections": ["posts/posts.json"]
+}
