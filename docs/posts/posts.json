@@ -1,5 +1,22 @@
 [
   {
+    "path": "posts/2021-04-15-cosine-embedding-loss-in-torch/",
+    "title": "Cosine Embedding loss in torch",
+    "description": "This is a short post showing the coside embedding loss in action with torch.",
+    "author": [
+      {
+        "name": "Daniel Falbel",
+        "url": "https://github.com/dfalbel"
+      }
+    ],
+    "date": "2021-04-15",
+    "categories": [],
+    "contents": "\nThe cosine embedding loss in torch is given by:\n\\[\\text{loss}(x, y) =\n        \\begin{cases}\n        1 - \\cos(x_1, x_2), & \\text{if } y = 1 \\\\\n        \\max(0, \\cos(x_1, x_2) - \\text{margin}), & \\text{if } y = -1\n        \\end{cases}\\]\nThe idea is to give it a pair of vectors and and a response value \\(1\\) or \\(-1\\) depending on if they belong to the same group or not.\nFirst let’s generate small dataset of 20 observations, each one being a length 100 vector. We also sample for each obs if it belongs to group ‘a’ or group ‘b’:\n\n\nlibrary(torch)\nlibrary(ggplot2) # going to use for plotting\nx <- torch_randn(20, 100)\ny <- sample(c(\"a\", \"b\"), replace = TRUE, size = x$shape[1])\n\n\n\nNext, we crate a torch dataset that will do the following everytime we ask for a new item \\(i\\):\nTake the observation corresponding to the item \\(i\\) in the dataset we created previously.\nWith \\(prob=0.5\\) select an observation from the same group to be it’s pair, otherwise select an observation from a different group.\nReturn both selected observations and the objective value \\(-1\\) of they are obs are not from the same group and \\(1\\) if they are.\n\n\ndata <- dataset(\n  initialize = function(x, y, rate = 0.5) {\n    self$x <- x\n    self$y <- y\n    self$rate <- rate\n  },\n  .getitem = function(i) {\n    \n    lab <- self$y[i]\n    if (self$rate < runif(1)) {\n      i_ <- sample(which(self$y == lab), 1)\n      obj <- 1\n    } else {\n      i_ <- sample(which(self$y != lab), 1)\n      obj <- -1\n    }\n    \n    list(x = self$x[i,], x_ = self$x[i_,], obj = obj)\n  },\n  .length = function() {\n    x$shape[1]\n  }\n)\n\n# Initialize the dataset and dataloaders\nd <- data(x, y)\ndl <- dataloader(d, batch_size = 5)\n\n\n\nThe model we are going to define is a dimension reduction model. It will take the observation space from 100 dimensions to only 2: \\(\\mathbb{R}_{100} \\Rightarrow \\mathbb{R}_2\\). It does that via linear model.\n\n\nmodel <- nn_linear(100, 2)\n\n\n\nWe create a plotting utility to plot observations in the model space.\n\n\nmake_plot <- function(model, x, y) {\n  with_no_grad({\n    as <- as.data.frame(as.matrix(model(x[y == \"a\", ])))\n    as$class <- \"a\"\n    bs <- as.data.frame(as.matrix(model(x[y == \"b\", ])))\n    bs$class <- \"b\"  \n  })\n  \n  ggplot(rbind(as, bs), aes(x = V1, y = V2, color = class)) +\n    geom_point() +\n    xlim(-2, 2) +\n    ylim(-2, 2)\n}\n\n\n\nWe now fit this model for 100 epochs saving intermediary plots:\n\n\nopt <- optim_adam(model$parameters)\ncriterion <- nn_cosine_embedding_loss()\n\nplots <- list()\nfor (epoch in 1:100) {\n  coro::loop(for (b in dl) {\n    r <- model(b$x)\n    r_ <- model(b$x_)\n    \n    opt$zero_grad()\n    loss <- criterion(r, r_, b$obj)\n    loss$backward()\n    opt$step()\n    \n  })\n  plots[[length(plots) + 1]] <- make_plot(model, x, y)\n}\n\n\n\nAnd we can finally observe how the observations evolve in the model space during training:\n\n\ngifski::save_gif(delay = 0.1, lapply(seq_along(plots), function(x) {\n  p <- plots[[x]] +\n    ggtitle(label = sprintf(\"Epoch %02d\", x))\n  print(p)\n}), \"animation.gif\")\n\n\n[1] \"/Users/dfalbel/Documents/dfalbel.github.io/_posts/2021-04-15-cosine-embedding-loss-in-torch/animation.gif\"\n\n\n\n\n\n",
+    "preview": {},
+    "last_modified": "2021-04-15T12:59:20-03:00",
+    "input_file": {}
+  },
+  {
     "path": "posts/2021-03-31-gh-actions-self-hosted/",
     "title": "Self-created custom runners with Github Actions",
     "description": "In this article we describe the approach we are using to \ncreate and manage custom GPU accelerated Windows instances\nto run CI workflows in the torch project.",
