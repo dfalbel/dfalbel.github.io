@@ -1,0 +1,99 @@
+---
+title: "Classification losses in torch"
+description: |
+  In this article we describe the many ways one can compute loss functions
+  in binary classification problems when using torch.
+author:
+  - name: Daniel Falbel
+    url: https://github.com/dfalbel
+date: 05-27-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(torch)
+```
+
+Choosing the correct loss function is an important step in machine learning problems. In general it depends on the problem you are trying to solve and how you described this problem in mathematical terms (or probabilistic terms). The mathematical definition should lead you to a loss function that you want to minimize.
+
+However, because computers live in a world where there's finite precision, the same loss function can have multiple implementations that account for different numerical stability problems. The way you encode your data can also influence the implementation you chose.
+
+torch won't hide this from you and leaves to the user the choice of which implementation to use and this can be quite confusing. Let's take a look at multiple ways to compute the cross entropy in torch, for both binary and multi-class classification problems.
+
+## Binary cross-entropy
+
+The binary cross-entropy or *logloss* is defined as:
+
+$$
+L(\hat{y},y) = - \left[ y \log(\hat{y}) + (1-y)\log(1-\hat{y}) \right]
+$$
+
+Where $\hat{y}$ is the an estimate for $P(y=1)$.
+
+This exact same formula is implemented in torch in the `torch::nn_bce_loss()`. So given `y` and `y_hat` we can compute the binary cross entropy with:
+
+```{r}
+y <- torch_tensor(c(1,1,1,0,0,0))
+y_hat <- torch_tensor(c(0.7, 0.8, 0.9, 0.1, 0.2, 0.3))
+loss <- torch::nn_bce_loss()
+loss(y_hat, y)
+```
+
+Turns out that, since it's hard to keep constraints like $\hat{y} \in (0,1)$ when doing optimization it's common practice to write $\hat{y} = \sigma(z)$ where $\sigma$ is the sigmoid function - defined by $\sigma(x) = \frac{1}{1+ e^{-x}}$. There are other reasons for that, but intuitively this makes sense because this function takes any real number and puts it into the $(0,1)$ interval. However, exponentiating numbers in the real scale can quickly become a problem of numerical stability.
+
+To help fix this we can write the binary cross-entropy in terms of the logits $z$ :
+
+$$
+L(z,y) = - \left[ y \log( \frac{1}{1+ e^{-z}}) + (1-y)\log(1-\frac{1}{1+ e^{-z}}) \right]
+$$
+
+And here we have a sum of logarithms of exponential values and we can use the [LogSumExp trick](https://www.xarg.org/2016/06/the-log-sum-exp-trick-in-machine-learning/) to get a more numerical stable version. And this is what `torch::nn_bce_with_logits_loss()` implements. You can see that if use the `torch::nn_bce_with_logits_loss()` with the logits, computed by using the inverse of the sigmoid function we get the same results as using the binary cross entropy.
+
+```{r}
+# inverse of the sigmoid function
+z <- torch_log(y_hat/(1-y_hat)) 
+loss <- torch::nn_bce_with_logits_loss()
+loss(z, y)
+```
+
+## Negative likelihood loss
+
+There's yet another way to obtain this same value in torch, but now it's not related to numerical stability but to how you prefer encoding your data. You might want to encode your data in the following setting.
+
+First instead of encoding your labels as a degenerated distribution containing 0s and 1s only we will encode them as indexes. Indexes in torch are represented with the `torch_long()` and they start at 1, so we do:
+
+```{r}
+y2 <- (y + 1)$to(dtype = torch_long())
+y2
+```
+
+Also, instead of representing the probabilities a single vector containing the the $P(y=2)$ we will now represent them by a matrix with 2 columns. THe first columns is $P(y=1)$ and the second is $P(y=2)$. **Note** that this has the exact same information as before because given one column you can easily find the other by doing $1-p$ .
+
+```{r}
+y_hat2 <- torch_stack(list(1-y_hat, y_hat), dim = 2)
+y_hat2
+```
+
+We can then use the Negative Likelihood loss to compute the same quantity with:
+
+```{r}
+loss <- torch::nn_nll_loss()
+loss(torch_log(y_hat2), y2)
+```
+
+Note that the NLL takes log probabilities instead of logits or probabilities. This [blogpost](https://sebastianraschka.com/faq/docs/pytorch-crossentropy.html) by Sebastian Raschka has a nice explanation on how the cross entropy relates to the NLL.
+
+## Fim
+
+We conclude this post with a table that tries to summarize the different loss functions for classification in torch. Even though we didn't talk about multiclass-classification here, this table will also describe it:
+
+| Name                        | Input                                      | Target                                                                                     |
+|-----------------------------|--------------------------------------------|--------------------------------------------------------------------------------------------|
+| `nn_bce_loss()`             | Vector of probabilities                    | Vector of probabilities. usually a degenerated one containing only 0s and 1s.              |
+| `nn_bce_with_logits_loss()` | Vector of logits                           | Vector of probabilities. usually a degenerated one containing only 0s and 1s.              |
+| `nn_nll_loss()`             | Matrix of log-probabilities for each class | Indexes for each class. Remember: indexes start at 1 and should have `torch_long()` dtype. |
+| `nn_cross_entropy_loss()`   | Matrix of logits for each class.           | Indexes for each class. Remember: indexes start at 1 and should have `torch_long()` dtype. |
