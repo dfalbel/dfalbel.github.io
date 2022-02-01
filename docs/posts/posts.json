@@ -1,5 +1,22 @@
 [
   {
+    "path": "posts/2022-02-01-implementing-glmnets-optimization-algorithm-with-torch/",
+    "title": "Implementing glmnet's optimization algorithm with torch",
+    "description": "A short description of the post.",
+    "author": [
+      {
+        "name": "Daniel Falbel",
+        "url": "https://github.com/dfalbel"
+      }
+    ],
+    "date": "2022-02-01",
+    "categories": [],
+    "contents": "\nLet’s consider the usual linear regression problem defined in Friedman, Hastie, and Tibshirani (2010). Now mostly quoting:\nWe have a response variable \\(Y \\in \\mathbb{R}\\) and a predictor vect \\(X \\in \\mathbb{R}^p\\), and we approximate the regression function by a linear model \\(E(Y|X = x) = \\beta_0 + x^T\\beta\\). We have \\(N\\) observation pairs \\((x_i, y_i)\\). For simplicity we assume the \\(x_{ij}\\) are standardized: \\(\\sum_{i=1}^Nx_{ij} = 0, \\frac{1}{N}\\sum_{i=1}^Nx_{ij}^2 = 1, for j = 1, ..., p\\). The elastic net solves the following problem:\n\\[\n\\underset{(\\beta_0,\\beta)\\in\\mathbb{R}^{p+1}}{\\hbox{min}}R_{\\lambda}(\\beta_0,\\beta) = \\underset{(\\beta_0,\\beta)\\in\\mathbb{R}^{p+1}}{\\hbox{min}}\\left[ \\frac{1}{2N} \\sum_{i=1}^N \\left(y_i - \\beta_0 + x_i^T\\beta  \\right)^2 + \\lambda P_{\\alpha}(\\beta)\\right]\n\\]\nwhere,\n\\[\nP_{\\alpha}(\\beta) = (1-\\alpha)\\frac{1}{2}||\\beta||^2_{l2} + \\alpha ||\\beta||_ {l1} = \\sum_{j=1}^p \\left[ \\frac{1}{2}(1-\\alpha)\\beta_j^2 + \\alpha |\\beta_j| \\right].\n\\]\nTo solve this problem Friedman, Hastie, and Tibshirani (2010) uses a coordinate gradient descent algorithm. Given that we are updating a single parameter per optimization step it’s possible to derive a very efficient update rule given by equation the following equation:\n\\[\n\\overset{\\sim}{\\beta}_j  = \\frac{S\\left(\\frac{1}{N}\\sum_{i=1}^{N} x_{ij} (y_i - \\overset{\\sim}{y}_i^{(j)}), \\lambda\\alpha \\right)}{1 + \\lambda(1-\\alpha)}\n\\]\nwhere:\n\\(\\overset{\\sim}{y}^{(j)}_i\\) is the fitted value excluding the contribution from \\(x_j\\),\n\\(S(z, \\gamma)\\) is the soft-thresholding operator.\nFriedman et al. (2007) details how to derive this update rule.\n\n\n\nFriedman, Jerome, Trevor Hastie, Holger Höfling, and Robert Tibshirani. 2007. “Pathwise Coordinate Optimization.” The Annals of Applied Statistics 1 (2). https://doi.org/10.1214/07-aoas131.\n\n\nFriedman, Jerome, Trevor Hastie, and Robert Tibshirani. 2010. “Regularization Paths for Generalized Linear Models via Coordinate Descent.” Journal of Statistical Software 33 (1). https://doi.org/10.18637/jss.v033.i01.\n\n\n\n\n",
+    "preview": {},
+    "last_modified": "2022-02-01T10:41:08-03:00",
+    "input_file": "implementing-glmnets-optimization-algorithm-with-torch.knit.md"
+  },
+  {
     "path": "posts/2021-05-27-classification-losses-in-torch/",
     "title": "Classification losses in torch",
     "description": "In this article we describe the many ways one can compute loss functions\nin binary classification problems when using torch.",

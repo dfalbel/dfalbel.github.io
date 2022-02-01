@@ -1,0 +1,167 @@
+---
+title: "Implementing glmnet's optimization algorithm with torch"
+description: |
+  A short description of the post.
+author:
+  - name: Daniel Falbel
+    url: https://github.com/dfalbel
+date: 02-01-2022
+output:
+  distill::distill_article:
+    self_contained: false
+bibliography: references.bib
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Let's consider the usual linear regression problem defined in @friedman2010. Now mostly quoting:
+
+We have a response variable $Y \in \mathbb{R}$ and a predictor vect $X \in \mathbb{R}^p$, and we approximate the regression function by a linear model $E(Y|X = x) = \beta_0 + x^T\beta$. We have $N$ observation pairs $(x_i, y_i)$. For simplicity we assume the $x_{ij}$ are standardized: $\sum_{i=1}^Nx_{ij} = 0, \frac{1}{N}\sum_{i=1}^Nx_{ij}^2 = 1, for j = 1, ..., p$. The elastic net solves the following problem:
+
+$$
+\underset{(\beta_0,\beta)\in\mathbb{R}^{p+1}}{\hbox{min}}R_{\lambda}(\beta_0,\beta) = \underset{(\beta_0,\beta)\in\mathbb{R}^{p+1}}{\hbox{min}}\left[ \frac{1}{2N} \sum_{i=1}^N \left(y_i - \beta_0 + x_i^T\beta  \right)^2 + \lambda P_{\alpha}(\beta)\right]
+$$
+
+where,
+
+$$
+P_{\alpha}(\beta) = (1-\alpha)\frac{1}{2}||\beta||^2_{l2} + \alpha ||\beta||_ {l1} = \sum_{j=1}^p \left[ \frac{1}{2}(1-\alpha)\beta_j^2 + \alpha |\beta_j| \right].
+$$
+
+To solve this problem @friedman2010 uses a [coordinate gradient descent](https://en.wikipedia.org/wiki/Coordinate_descent) algorithm. Given that we are updating a single parameter per optimization step it's possible to derive a very efficient update rule given by equation the following equation:
+
+$$
+\overset{\sim}{\beta}_j  = \frac{S\left(\frac{1}{N}\sum_{i=1}^{N} x_{ij} (y_i - \overset{\sim}{y}_i^{(j)}), \lambda\alpha \right)}{1 + \lambda(1-\alpha)}
+$$
+
+where:
+
+-   $\overset{\sim}{y}^{(j)}_i$ is the fitted value excluding the contribution from $x_j$,
+
+-   $S(z, \gamma)$ is the soft-thresholding operator.
+
+@friedman2007 details how to derive this update rule.
+
+In this torch implementation we don't care about the efficient update rule, but we do want
+to obtain sparse coeffiecients.
+
+```{r}
+library(torch)
+library(glmnet)
+
+penalty <- 0.1
+mixture <- 1
+```
+
+
+```{r}
+optim_cgd <- torch::optimizer(
+  name = "coordinate_gradient_descent",
+  initialize = function(params, lr = optim_required(), penalty, mixture) {
+    self$weights <- params[grepl("weight", names(params))]
+    self$biases <- params[grepl("bias", names(params))]
+    self$lr <- lr
+    self$step_n <- 0
+    self$thresh <- self$penalty*self$mixture
+  },
+  step = function() {
+    self$step_n <- self$step_n + 1L
+    i <- self$step_n %% self$weights[[1]]$size(2) + 1
+    w <- self$weights[[1]][,i]
+    grad <- self$weights[[1]]$grad[,i]
+    
+    torch::with_no_grad({
+      w$add_(grad, -1 * self$lr)
+      
+      # if (as.logical(abs(w) < self$thresh))
+      #   w$zero_()
+    })
+  },
+  zero_grad = function() {
+    torch::with_no_grad({
+      for (w in self$weights) {
+        if (!torch::is_undefined_tensor(w$grad))
+          w$grad$zero_()
+      }
+      for (b in self$biases) {
+        if (!torch::is_undefined_tensor(b$grad))
+          b$grad$zero_()
+      }  
+    })
+  }
+)
+```
+
+```{r}
+P <- function(model, mixture) {
+  params <- model$parameters
+  params <- params[grepl("weight", names(params))]
+  
+  l2 <- params %>% 
+    lapply(function(x) torch_sum(x^2)) %>% 
+    torch_stack() %>% 
+    torch_sum()
+  
+  l1 <- params %>% 
+    lapply(function(x) torch_sum(torch_abs(x))) %>% 
+    torch_stack() %>% 
+    torch_sum()
+  
+  (1-mixture)/2*l2 + mixture*l1
+}
+```
+
+```{r}
+
+```
+
+
+```{r}
+glmnet_torch <- function(x, y, penalty, mixture = 1) {
+  model <- nn_linear(ncol(x), 1, bias = FALSE)
+  N <- nrow(x)
+  x <- torch_tensor(x)
+  y <- torch_tensor(matrix(y, ncol = 1))
+  
+  opt <- optim_cgd(model$parameters, lr = 0.01, mixture, penalty)
+  
+  R_ <- Inf
+  step <- 0
+  while (TRUE) {
+    step <- step + 1
+    R <- 1/(2*N)*torch_sum((model(x) - y)^2) + penalty * P(model, mixture)
+    
+    opt$zero_grad()
+    R$backward()
+    opt$step()
+    
+    if (as.logical(abs(R_ - R) < 1e-5) || step > 1e3) break
+    R_ <- R
+  }
+  
+  model
+}
+```
+
+```{r}
+fit_t <- glmnet_torch(x, y, 10)
+```
+
+
+```{r}
+data(QuickStartExample)
+x <- scale(QuickStartExample$x)
+y <- scale(QuickStartExample$y)
+
+fit <- glmnet(x, y, alpha = 1, intercept = FALSE)
+coef(fit, 1.6)
+```
+
+
+
+
+
+
