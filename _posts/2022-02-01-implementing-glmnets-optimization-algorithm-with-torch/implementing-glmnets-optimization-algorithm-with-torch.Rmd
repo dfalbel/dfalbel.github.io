@@ -126,7 +126,7 @@ glmnet_torch <- function(x, y, penalty, mixture = 1) {
   x <- torch_tensor(x)
   y <- torch_tensor(matrix(y, ncol = 1))
   
-  opt <- optim_cgd(model$parameters, lr = 0.01, mixture, penalty)
+  opt <- optim_cgd(model$parameters, lr = 0.1, mixture, penalty)
   
   R_ <- Inf
   step <- 0
@@ -146,9 +146,6 @@ glmnet_torch <- function(x, y, penalty, mixture = 1) {
 }
 ```
 
-```{r}
-fit_t <- glmnet_torch(x, y, 10)
-```
 
 
 ```{r}
@@ -158,6 +155,8 @@ y <- scale(QuickStartExample$y)
 
 fit <- glmnet(x, y, alpha = 1, intercept = FALSE)
 coef(fit, 1.6)
+fit_t <- glmnet_torch(x, y, 10)
+fit_t$parameters
 ```
 
 
