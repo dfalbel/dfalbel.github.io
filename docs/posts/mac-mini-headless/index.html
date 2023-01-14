@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Daniel Falbel">
+<meta name="dcterms.date" content="2023-01-14">
 
-<title>dfalbel - About</title>
+<title>dfalbel - Mac Mini as a headless server</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,21 +25,22 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -59,7 +62,7 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed fullcontent">
@@ -69,7 +72,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg navbar-dark ">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">dfalbel</span>
     </a>
   </div>
@@ -79,7 +82,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./about.html" aria-current="page">
+    <a class="nav-link" href="../../about.html">
  <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -104,33 +107,51 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     
 <!-- main -->
-<div class="quarto-about-jolla">
-  <img src="profile.jpg" class="about-image
-  round " style="height: 15em; width: 15em;">
- <header id="title-block-header" class="quarto-title-block default">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">About</h1>
+<h1 class="title">Mac Mini as a headless server</h1>
 </div>
+
+
+
 <div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Daniel Falbel </p>
+          </div>
   </div>
-</header><main class="content" id="quarto-document-content">
-<p>About this blog</p>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 14, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>This story is probably not interesting at all and too naive. You should definitely spend your time on something better than reading it but, I decided that I would like to write more in 2023 and so far I already failed for 14 days. So I decided to write it anyway.</p>
+<p>I have a M1 Mac Mini that I use as a self-hosted runner for Github Actions in the <a href="https://github.com/mlverse/torch">torch repository</a> and other repositories in the mlverse organisation that require specific testing for M1 macs, as currently there’s no M1 runners available by default on GitHub.</p>
+<p>This Mac Mini used to stay in my office in São Paulo, and once I configured it as the CI self hosted runner I never had to connect it again to my monitor, keyboard or mouse to change any setting. Everything was up and running with no problems.</p>
+<p>In the beginning of this year I temporarily moved from São Paulo to Europe, and I decided to bring the M1 Mac Mini. What if for some reason the internet was down in my office in São Paulo, or a power outage could turn the mini off and there would be no one to turn it back on.</p>
+<p>Back then, I didn’t check but, I thought if would be surely possible to power on the MacMini and connect it to WiFi without a monitor, keyboard and mouse. Perhaps ssh’ing from my Mac, or using a cabel for screen sharing.</p>
+<p>Arriving at the first apartment I was going to stay, I powered it on, and started searching online how to remotely connect it to internet. The first thing I found is that since that MacMini had FileVault enabled - <a href="https://apple.stackexchange.com/a/217698">it wouldn’t be possible to boot it remotely</a>. It seems that when you boot a FileVault enabled Mac, only a small portion of the OS is actually enabled so you can type your password, but that’s not enough for Remote Screen Sharing or ssh’ing into the mini.</p>
+<p>OK, I was probably naive. So I ran to a local store and bought a mouse. keyboard in that store were specially expensive (20 euros - if you don’t find it expensive, that’s because you are not a Brazilian making currency conversions all the time), and I didn’t want to buy a keyboard that I was going to use only to login into the mac mini. There was a TV in the apartment, I was planing to connect the HDMI cable to the mini, connect the mouse and access some kind of virtual keyboard to type my password and make it boot.</p>
+<p>To my surprise, enabling the virtual keyboard is not something that you can do from the login menu, unless you have already enabled it the in the accessibility settings in the MacOS settings app. I can change the input language to whatever I want, but impossible to get the virtual keyboard to work.</p>
+<p>The next day, I moved to another apartment, this one I was going to stay 2 weeks. I was convinced that I would need to buy a keyboard but, the new apartment doesn’t have a TV or monitor, thus probably not worth buying the keyboard…</p>
+<p>I’m moving again the next week and there will be a TV in the new apartment and I’ll probably end up buying a keyboard and everything is going to be solved. But really, it feels very weird needing a monitor, keyboard and mouse in order to be able to use this nice and small computer as a headless server.</p>
 
 
-</main> 
-  <hr class="about-sep">
-   <div class="about-links">
-  <a href="https://twitter.com/dfalbel" class="about-link">
-    <i class="bi bi-twitter"></i>
-     <span class="about-link-text">Twitter</span>
-  </a>
-  <a href="https://github.com/dfalbel" class="about-link">
-    <i class="bi bi-github"></i>
-     <span class="about-link-text">Github</span>
-  </a>
-</div>
-</div>
- <!-- /main -->
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -151,6 +172,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
   const clipboard = new window.ClipboardJS('.code-copy-button', {
     target: function(trigger) {
       return trigger.previousElementSibling;

@@ -1,0 +1,20 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "dfalbel"
+  navbar:
+    right:
+      - about.qmd
+      - icon: github
+        href: https://github.com/dfalbel
+      - icon: twitter
+        href: https://twitter.com/dfalbel
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+
+
+
