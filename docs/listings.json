@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/autorunner/index.html",
       "/posts/mac-mini-headless/index.html"
     ]
   }

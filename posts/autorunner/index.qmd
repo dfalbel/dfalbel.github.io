@@ -1,0 +1,247 @@
+---
+title: "Autoscaling self-hosted runners for GH Actions"
+author: Daniel Falbel
+date: "2023-01-30"
+---
+
+This blogpost describes a service called 'autorunner' that's now used
+in the mlverse organization to auto-scale self-hosted runners for GitHub actions. 
+
+In mlverse we build R packages that connect to the deep learning ecosystem. GPU's are used a lot for deep elarning and thus we need
+to test our packages in systems equipped with GPU's, with multiple
+versions and etc.
+
+I used to have a linux box in my office that is equipped with a GPU, but
+I recently moved to another country and couldn't bring it with me. THe machine has been disconnected from internet and can no longer serve for this. 
+
+We were missing GPU machines for our CI and a few alternatives were possible.
+
+1. Rent a cloud instance machine equipped with a GPU, install the GitHub actions agent on it and use it for CI.
+2. Build a service that upon request launches VM instances equipped with GPU's and delete it back when they are no longer in use.
+
+The problem of the approach 1 is cost. It's quite expensive to rent a GPU machine 24h a day 7/7 for a month. And we would probably only use it for a few hours in the day. (Each CI job takes around 20 min) and we don't need to run the GPU's in every PR.
+
+We decided to use the second approach. And code is available in the [autorunner](https://github.com/dfalbel/autorunner) repository.
+
+## How it works
+
+The system is based on GitHub Webhooks as suggested in the self-hosted runners [documentation from GitHub actions](https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#using-webhooks-for-autoscaling).
+
+It works like this:
+
+- A webhook callback is registered to listen to the **workflow jobs** hook. This hook is called whenever a job is queued, changes it's status to 'in-progress' and when 'completed' and passes a lot of information to the callback endpoint, including the *runner* labels, repository, and etc.
+
+- When the hook is called with a **'queue'** event, it adds a task to Google Cloud Tasks queue that will launch an instance on GCE equipped with a GPU. We use a startup script to install the GitHub actions runner agent and make the agent run in ephemeral mode.
+
+- When the hook is called with a **'completed'** event, it adds a task to Google Cloud Tasks queue that will delete the instance from GCE.
+
+## Task scheduler
+
+The service responsible to listen to the GitHub webhooks events is called task scheduler. We could make it so it creates the instance right there before returning the
+webhook response. However, it must respond within less then 10s which is timeout defined by GitHub and this is not enough time to launch an instance on GCE.
+
+Because of this reason, this service will only create a [http request task](https://cloud.google.com/tasks/docs/creating-http-target-tasks) on 
+[Google Cloud Tasks](https://cloud.google.com/tasks).
+
+This service is a [plumber API](https://www.rplumber.io) hosted in [Google Cloud Run](https://cloud.google.com/run).
+
+It has a single endpoint that takes the webhook resquest and decides if it should
+register the 'create VM instance' or 'delete VM instance' task. The code is just:
+
+``` r
+function(req) {
+  body <- jsonlite::fromJSON(req$postBody)
+
+  if (!"self-hosted" %in% body$workflow_job$labels)
+    return("ok")
+
+  if (body$action == "queued") {
+
+    if (!"gce" %in% body$workflow_job$labels)
+      return("ok")
+
+    instance_id <- paste0("ghgce-", body$workflow_job$id, "-",  body$workflow_job$run_id)
+    # add some more randomstuff to the instance name to avoid collisions.
+    instance_id <- paste0(instance_id, "-", paste0(sample(letters, 10, replace=TRUE), collapse = ""))
+
+    gpu <- as.numeric("gpu" %in% body$workflow_job$labels)
+    labels <- paste(body$workflow_job$labels[-1], collapse = ",")
+    return(tasks_create_vm(instance_id, labels, gpu))
+  }
+
+  if (body$action == "completed") {
+    instance_id <- as.character(body$workflow_job$runner_name)
+
+    if (is.null(instance_id)) {
+      return("nothing to delete")
+    }
+
+    if (!grepl("ghgce", instance_id)) {
+      return("not gce allocated instance")
+    }
+
+    return(tasks_delete_vm(instance_id))
+  }
+
+  return("nothing to do")
+}
+```
+
+As you can see we use the `workflow_job$labels` field in the webhook payload to
+decide the instance type (GPU or not) and also whether we should really create 
+an instance. For deleting the instance we can use the `workflow_job$runner_name`
+as it will contain the GCE instance name.
+
+The tasks are registered with eg. `tasks_create_vm` that just makes a call to 
+the Cloud Tasks API. Using [gargle](https://gargle.r-lib.org) for authentication.
+
+Registering a task to create a VM executes something like:
+
+``` r
+tasks_create_vm <- function(instance_id, labels, gpu) {
+  cloud_tasks_request(
+    method = "POST",
+    body = list(
+      task = list(
+        httpRequest = list(
+          url = paste0(Sys.getenv("SERVICE_URL"), "vm_create"),
+          httpMethod = "POST",
+          body = openssl::base64_encode(jsonlite::toJSON(auto_unbox = TRUE, list(
+            instance_id = instance_id,
+            labels = labels,
+            gpu = gpu
+          )))
+        )
+      )
+    )
+  )
+}
+```
+
+I'd like to note the `url` here in the `httpRequest` item of the body. `url = paste0(Sys.getenv("SERVICE_URL"), "vm_create")` will be the URL and endpoint name for the **task handler** service that we describe below. Cloud Tasks will be responsible to making the defined http request on time, and handle failures, retries, etc.
+
+## Task handler
+
+The task handler is responsible for executing the VM creation and deletion tasks.
+It's again a plumber API hosted on Cloud Run with endpoints for each VM task (create and delete).
+
+Here's an example of the endpoint that creates the VM using the [googleComputeEngineR](https://cloudyr.github.io/googleComputeEngineR/) package.
+The VM creation is pretty standard except for the startup script that will install
+the GH Actions runner agent and other addition software - including the GPU drivers 
+when a GPU instance is requested.
+
+The endpoint is defined as:
+
+``` r
+#* Start a new runner with specified options
+#*
+#* @post vm_create
+function(instance_id, labels, gpu) {
+  gpu <- as.numeric(gpu)
+  start_gce_vm(instance_id, labels, gpu)
+}
+```
+
+And the VM is started with:
+
+``` r
+startup_script <- function(org, labels, gpu) {
+  token <- gh::gh("POST /orgs/{org}/actions/runners/registration-token", org = org)
+  glue::glue(
+    readr::read_file("bootstrap.sh"),
+    org = org,
+    runner_token = token$token,
+    labels = labels
+  )
+}
+
+start_gce_vm <- function(instance_id, labels, gpu) {
+  googleComputeEngineR::gce_vm(
+    instance_id,
+    image_project = "ubuntu-os-cloud",
+    image_family = "ubuntu-2204-lts",
+    predefined_type = "n1-standard-4",
+    disk_size_gb = 90,
+    project = googleComputeEngineR::gce_get_global_project(),
+    zone = googleComputeEngineR::gce_get_global_zone(),
+    metadata = list(
+      "startup-script" = startup_script(
+        org = "mlverse",
+        labels = labels,
+        gpu = gpu
+      )
+    ),
+    acceleratorCount = if (gpu) 1 else NULL,
+    acceleratorType = if (gpu) "nvidia-tesla-t4" else "",
+    scheduling = list(
+      'preemptible' = TRUE
+    )
+  )
+}
+```
+
+We use [*preemptible* VM's](https://cloud.google.com/compute/docs/instances/preemptible) to further reduce costs. This is defined with `scheduling = list('preemptible' = TRUE)` in the above function. 
+
+Note the `metadata` argument in `googleComputeEngineR::gce_vm`. Here we pass a shell script that installs the required software. This script is modified based the kind of
+VM that is created, the labels that you want to the self-hosted runner once it's registered and a GH Actions token, used to allow registering the runner into GH.
+
+Here's our script content:
+
+``` sh
+#! /bin/bash
+
+adduser --disabled-password --gecos "" actions
+cd /home/actions
+
+# set self-destructing after 1 hour
+# this will turn off the instance, but won't delete its disk, etc.
+# at least can avoid some costs.
+sudo shutdown -h +90
+
+# install docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+if [ "{gpu}" == "1" ]
+then
+  # GPU driver installation instructions from:
+  # https://cloud.google.com/compute/docs/gpus/install-drivers-gpu
+  curl https://autorunner-task-handler-fzwjxdcwoq-uc.a.run.app/driver/install_gpu_driver.py --output install_gpu_driver.py
+  sudo python3 install_gpu_driver.py
+
+
+  distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+      && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+      && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+            sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+            sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  sudo apt-get update
+  sudo apt-get install -y nvidia-docker2
+  sudo systemctl restart docker
+fi
+
+sudo -u actions mkdir actions-runner && cd actions-runner
+sudo -u actions curl -o actions-runner-linux-x64-2.300.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.300.2/actions-runner-linux-x64-2.300.2.tar.gz
+sudo -u actions echo "ed5bf2799c1ef7b2dd607df66e6b676dff8c44fb359c6fedc9ebf7db53339f0c  actions-runner-linux-x64-2.300.2.tar.gz" | shasum -a 256 -c
+sudo -u actions tar xzf ./actions-runner-linux-x64-2.300.2.tar.gz
+sudo -u actions ./config.sh --url https://github.com/{org} --token {runner_token} --ephemeral --labels {labels} --unattended
+./svc.sh install
+./svc.sh start
+```
+
+The installation of GPU drivers is handled by a script copied and slightly modified to install more recent drivers from
+[Google Cloud documentation](https://cloud.google.com/compute/docs/gpus/install-drivers-gpu#installation_scripts).
+We also install docker and nvidia-docker to be able to execute GH action jobs with a `container` specification. Specially for CUDA jobs it's much easier to use containers than to install CUDA/CUDNN.
+That's it. Feel free to copy and modify scripts in the [autorunner](https://github.com/dfalbel/autorunner) repository.
+
+## Future improvements
+
+There are many future improvements that we could provide in the future:
+
+- Allow specifying the GCE machine type using labels, eg a workflow with `runner: [self-hosted, gce, n1-standard-4]` would start a `n1-standard-4` machine. It would also be nice to allow other kinds of configurations like the disk size, image template, etc.
+
+- One flaw with this process is that sometimes a registered runner is picked up by another job in the organization that uses the same labels and is queued. There should be a way to chack if the actual job started after the VM has been registered and if not, try creating a new VM.
+
+- Instead of always installing the GPU drivers we could create VM images that already have it installed so we don't loose about ~5min of execution just installing the GPU drivers over and over. I'd expect Google or NVIDIA should provide images with the drivers pre-installed instead though.
+
+
