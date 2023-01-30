@@ -383,6 +383,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><p>Allow specifying the GCE machine type using labels, eg a workflow with <code>runner: [self-hosted, gce, n1-standard-4]</code> would start a <code>n1-standard-4</code> machine. It would also be nice to allow other kinds of configurations like the disk size, image template, etc.</p></li>
 <li><p>One flaw with this process is that sometimes a registered runner is picked up by another job in the organization that uses the same labels and is queued. There should be a way to chack if the actual job started after the VM has been registered and if not, try creating a new VM.</p></li>
 <li><p>Instead of always installing the GPU drivers we could create VM images that already have it installed so we don’t loose about ~5min of execution just installing the GPU drivers over and over. I’d expect Google or NVIDIA should provide images with the drivers pre-installed instead though.</p></li>
+<li><p>Windows support. GCE allows booting Windows VM instances. We would need to figure out how to automatically install the GitHub Actions agent and the CUDA drivers.</p></li>
 </ul>
 
 

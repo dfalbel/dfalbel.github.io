@@ -244,4 +244,6 @@ There are many future improvements that we could provide in the future:
 
 - Instead of always installing the GPU drivers we could create VM images that already have it installed so we don't loose about ~5min of execution just installing the GPU drivers over and over. I'd expect Google or NVIDIA should provide images with the drivers pre-installed instead though.
 
+- Windows support. GCE allows booting Windows VM instances. We would need to figure out how to automatically install the GitHub Actions agent and the CUDA drivers.
+
 
