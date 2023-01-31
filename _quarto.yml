@@ -17,7 +17,7 @@ format:
     css: styles.css
     comments:
       giscus: 
-        repo: quarto-dev/quarto-docs
+        repo: dfalbel/dfalbel.github.io
 
 
 
