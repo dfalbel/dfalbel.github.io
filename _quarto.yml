@@ -15,6 +15,9 @@ format:
   html:
     theme: cosmo
     css: styles.css
+    comments:
+      giscus: 
+        repo: quarto-dev/quarto-docs
 
 
 

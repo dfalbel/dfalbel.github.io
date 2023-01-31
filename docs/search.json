@@ -1,26 +1,5 @@
 [
   {
-    "objectID": "posts/mac-mini-headless/index.html",
-    "href": "posts/mac-mini-headless/index.html",
-    "title": "Mac Mini as a headless server",
-    "section": "",
-    "text": "This story is probably not interesting at all and too naive. You should definitely spend your time on something better than reading it but, I decided that I would like to write more in 2023 and so far I already failed for 14 days. So I decided to write it anyway.\nI have a M1 Mac Mini that I use as a self-hosted runner for Github Actions in the torch repository and other repositories in the mlverse organisation that require specific testing for M1 macs, as currently there’s no M1 runners available by default on GitHub.\nThis Mac Mini used to stay in my office in São Paulo, and once I configured it as the CI self hosted runner I never had to connect it again to my monitor, keyboard or mouse to change any setting. Everything was up and running with no problems.\nIn the beginning of this year I temporarily moved from São Paulo to Europe, and I decided to bring the M1 Mac Mini. What if for some reason the internet was down in my office in São Paulo, or a power outage could turn the mini off and there would be no one to turn it back on.\nBack then, I didn’t check but, I thought if would be surely possible to power on the MacMini and connect it to WiFi without a monitor, keyboard and mouse. Perhaps ssh’ing from my Mac, or using a cabel for screen sharing.\nArriving at the first apartment I was going to stay, I powered it on, and started searching online how to remotely connect it to internet. The first thing I found is that since that MacMini had FileVault enabled - it wouldn’t be possible to boot it remotely. It seems that when you boot a FileVault enabled Mac, only a small portion of the OS is actually enabled so you can type your password, but that’s not enough for Remote Screen Sharing or ssh’ing into the mini.\nOK, I was probably naive. So I ran to a local store and bought a mouse. keyboard in that store were specially expensive (20 euros - if you don’t find it expensive, that’s because you are not a Brazilian making currency conversions all the time), and I didn’t want to buy a keyboard that I was going to use only to login into the mac mini. There was a TV in the apartment, I was planing to connect the HDMI cable to the mini, connect the mouse and access some kind of virtual keyboard to type my password and make it boot.\nTo my surprise, enabling the virtual keyboard is not something that you can do from the login menu, unless you have already enabled it the in the accessibility settings in the MacOS settings app. I can change the input language to whatever I want, but impossible to get the virtual keyboard to work.\nThe next day, I moved to another apartment, this one I was going to stay 2 weeks. I was convinced that I would need to buy a keyboard but, the new apartment doesn’t have a TV or monitor, thus probably not worth buying the keyboard…\nI’m moving again the next week and there will be a TV in the new apartment and I’ll probably end up buying a keyboard and everything is going to be solved. But really, it feels very weird needing a monitor, keyboard and mouse in order to be able to use this nice and small computer as a headless server."
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "blog posts",
-    "section": "",
-    "text": "Autoscaling self-hosted runners for GH Actions\n\n\n\n\n\n\n\n\n\n\n\n\nJan 30, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nMac Mini as a headless server\n\n\n\n\n\n\n\n\n\n\n\n\nJan 14, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this blog"
-  },
-  {
     "objectID": "posts/autorunner/index.html",
     "href": "posts/autorunner/index.html",
     "title": "Autoscaling self-hosted runners for GH Actions",
@@ -54,5 +33,26 @@
     "title": "Autoscaling self-hosted runners for GH Actions",
     "section": "Future improvements",
     "text": "Future improvements\nThere are many future improvements that we could provide in the future:\n\nAllow specifying the GCE machine type using labels, eg a workflow with runner: [self-hosted, gce, n1-standard-4] would start a n1-standard-4 machine. It would also be nice to allow other kinds of configurations like the disk size, image template, etc.\nOne flaw with this process is that sometimes a registered runner is picked up by another job in the organization that uses the same labels and is queued. There should be a way to chack if the actual job started after the VM has been registered and if not, try creating a new VM.\nInstead of always installing the GPU drivers we could create VM images that already have it installed so we don’t loose about ~5min of execution just installing the GPU drivers over and over. I’d expect Google or NVIDIA should provide images with the drivers pre-installed instead though.\nWindows support. GCE allows booting Windows VM instances. We would need to figure out how to automatically install the GitHub Actions agent and the CUDA drivers."
+  },
+  {
+    "objectID": "posts/mac-mini-headless/index.html",
+    "href": "posts/mac-mini-headless/index.html",
+    "title": "Mac Mini as a headless server",
+    "section": "",
+    "text": "This story is probably not interesting at all and too naive. You should definitely spend your time on something better than reading it but, I decided that I would like to write more in 2023 and so far I already failed for 14 days. So I decided to write it anyway.\nI have a M1 Mac Mini that I use as a self-hosted runner for Github Actions in the torch repository and other repositories in the mlverse organisation that require specific testing for M1 macs, as currently there’s no M1 runners available by default on GitHub.\nThis Mac Mini used to stay in my office in São Paulo, and once I configured it as the CI self hosted runner I never had to connect it again to my monitor, keyboard or mouse to change any setting. Everything was up and running with no problems.\nIn the beginning of this year I temporarily moved from São Paulo to Europe, and I decided to bring the M1 Mac Mini. What if for some reason the internet was down in my office in São Paulo, or a power outage could turn the mini off and there would be no one to turn it back on.\nBack then, I didn’t check but, I thought if would be surely possible to power on the MacMini and connect it to WiFi without a monitor, keyboard and mouse. Perhaps ssh’ing from my Mac, or using a cabel for screen sharing.\nArriving at the first apartment I was going to stay, I powered it on, and started searching online how to remotely connect it to internet. The first thing I found is that since that MacMini had FileVault enabled - it wouldn’t be possible to boot it remotely. It seems that when you boot a FileVault enabled Mac, only a small portion of the OS is actually enabled so you can type your password, but that’s not enough for Remote Screen Sharing or ssh’ing into the mini.\nOK, I was probably naive. So I ran to a local store and bought a mouse. keyboard in that store were specially expensive (20 euros - if you don’t find it expensive, that’s because you are not a Brazilian making currency conversions all the time), and I didn’t want to buy a keyboard that I was going to use only to login into the mac mini. There was a TV in the apartment, I was planing to connect the HDMI cable to the mini, connect the mouse and access some kind of virtual keyboard to type my password and make it boot.\nTo my surprise, enabling the virtual keyboard is not something that you can do from the login menu, unless you have already enabled it the in the accessibility settings in the MacOS settings app. I can change the input language to whatever I want, but impossible to get the virtual keyboard to work.\nThe next day, I moved to another apartment, this one I was going to stay 2 weeks. I was convinced that I would need to buy a keyboard but, the new apartment doesn’t have a TV or monitor, thus probably not worth buying the keyboard…\nI’m moving again the next week and there will be a TV in the new apartment and I’ll probably end up buying a keyboard and everything is going to be solved. But really, it feels very weird needing a monitor, keyboard and mouse in order to be able to use this nice and small computer as a headless server."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "blog posts",
+    "section": "",
+    "text": "Autoscaling self-hosted runners for GH Actions\n\n\n\n\n\n\n\n\n\n\n\n\nJan 30, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nMac Mini as a headless server\n\n\n\n\n\n\n\n\n\n\n\n\nJan 14, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this blog"
   }
 ]
