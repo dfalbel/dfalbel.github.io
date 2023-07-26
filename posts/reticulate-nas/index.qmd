@@ -1,0 +1,294 @@
+---
+title: "Reticulate handling of NA's"
+author: Daniel Falbel
+date: "2023-07-26"
+---
+
+There's room for improving how [reticulate](https://github.com/rstudio/reticulate) 
+handles missing values when converting between R and Python (pandas) data.frames.
+This documents highlights the current behavior and takes inspiration on 
+Pandas <-> Arrow casts to propose improvements.
+
+## Current behavior
+
+The following data.frame contains `NA`'s in the 4 most used data types in R.
+We use `tibble::as_tibble()` to show the data.frame as it better displays the data
+types.
+
+```{r, paged.print=FALSE}
+df <- data.frame(
+  bool = c(NA, TRUE, FALSE),
+  int = c(NA, 1L, 2L),
+  num = c(NA, 0.1, 0.2),
+  char = c(NA, "a", "b")
+)
+tibble::as_tibble(df)
+```
+Now casting into a pandas data frame. We see the following:
+
+```{r}
+p_df <- reticulate::r_to_py(df)
+```
+
+- For **bool**: `NA` became `TRUE` which is quite unexpected.
+- For **int**: `NA` became the largest possible integer. This is also unexpected.
+  However pandas default integer data type does not support `NA`'s and in theory
+  one must cast them to float.
+- For **num**: we got a `NaN`, which is the default missing value in Pandas,
+  even though an [experimental `pd.NA`](https://pandas.pydata.org/docs/user_guide/missing_data.html#missing-data-na)
+  value.
+- For **char**, we get NA as a character, which is also very unlikely to be the best
+  way to handle the conversion. 
+  
+  
+### Getting values back into R
+
+Casting back the pandas data.frame into R, we get:
+
+```{r, paged.print=FALSE}
+reticulate::py_to_r(p_df)
+```
+It mostly works, besides that the missing boolean value is lost.
+
+## How others do it
+
+reticulate is not the only library that needs to convert tables with such types
+that happen to contain missing values into pandas data frames. We looked into how [Arrow](https://arrow.apache.org/docs/python/index.html) and 
+[Polars](https://github.com/pola-rs/polars) work in such cases. Both libraries 
+support missing values via an explicit `NULL` value. Polars is based on Arrow, so
+there shouldn't exist many differences compared to Arrow besides some additional
+handling of `NaN`s.
+
+```{python}
+import pyarrow as pa
+
+b = pa.array([None, True, False])
+i = pa.array([None, 1, 2])
+n = pa.array([None, 0.1, 0.2])
+c = pa.array([None, "a", "b"])
+
+at = pa.table([b, i, n, c], names=["bool", "int", "num", "char"])
+```
+
+And this is the result of the cast:
+
+```{python}
+p_df = at.to_pandas()
+p_df
+p_df.dtypes
+```
+Note that:
+
+- **bool** and **char** were cast into object types. The object data type in Pandas
+  is used for columns with mixed types. 
+  One possible downside of this approach is that `NA`s become bool after any comparison.
+  It also cast to `False` (or 0) when you sum a column containing a `None`.
+  
+  ```{python}
+  p_df['bool'] & True
+  p_df['bool'] | True
+  p_df['bool'].sum()
+  p_df['bool'].isna()
+  ```
+  
+- **int** has been cast into a 'float64' type. This reflects Pandas default approach
+  too, since integer values can't represent `NaN`s (the default missing value).
+  This approach seems reasonable for reticulate to consider - specially considering
+  how R is flexible in general with numerics and integers.
+  
+- **num**: the default missing value (`NaN`) is used.
+
+### What happens with round trip casts
+
+It seems that from the above it's hard to get back the same arrow table that
+was first converted. Let's try:
+
+```{python}
+pa.Table.from_pandas(p_df)
+```
+This works quite fine. The only information that has been lost is the data type
+of the integer column, that has been transformed into a float.
+
+TODO: figure out how arrow does this. Does it walk trough pandas `object` columns,
+and if it's constant besides the NULL, it uses that data type?
+
+### Using Pandas nullable data types
+
+Arrow supports using Pandas nullable data types with:
+
+```{python}
+import pandas as pd
+dtype_mapping = {
+    pa.int8(): pd.Int8Dtype(),
+    pa.int16(): pd.Int16Dtype(),
+    pa.int32(): pd.Int32Dtype(),
+    pa.int64(): pd.Int64Dtype(),
+    pa.uint8(): pd.UInt8Dtype(),
+    pa.uint16(): pd.UInt16Dtype(),
+    pa.uint32(): pd.UInt32Dtype(),
+    pa.uint64(): pd.UInt64Dtype(),
+    pa.bool_(): pd.BooleanDtype(),
+    pa.float32(): pd.Float32Dtype(),
+    pa.float64(): pd.Float64Dtype(),
+    pa.string(): pd.StringDtype(),
+}
+
+p_df_nullable = at.to_pandas(types_mapper=dtype_mapping.get)
+```
+IN such cases, the round trip cast also works perfectly:
+
+```{python}
+pa.Table.from_pandas(p_df_nullable)
+```
+
+
+### Arrow -> Pandas -> R?
+
+One question that came up is what happens if we take the Arrow table (that natively)
+containing missing values, cast into pandas and then into R. Can reticulate correctly
+infer data types?
+
+```{r, paged.print=FALSE}
+tibble::as_tibble(reticulate::py$p_df)
+```
+
+It seems reasonable, but we don't simplify the columns types which Arrow does 
+nicely. 
+
+What if we get the Pandas table that uses the nullable data types:
+
+```{r, error = TRUE}
+reticulate::py$p_df_nullable
+```
+
+Doesn't work.
+
+### Polars
+
+We don't expect many differences in behavior between Arrow and Polars, so we just
+quickly print the conversion results:
+
+```{python}
+import polars as pl
+pl_df = pl.DataFrame({
+  'bool': [None, True, False],
+  'int':  [None, 1, 2],
+  'num':  [None, 0.1, 0.2],
+  'char': [None, "a", "b"],
+})
+pl_df
+```
+Converting into pandas
+
+```{python}
+p_df = pl_df.to_pandas()
+p_df
+p_df.dtypes
+```
+And getting back into polars:
+
+```{python, paged.print = FALSE}
+print(pl.DataFrame(p_df))
+```
+Same as with Arrow.
+
+### PySpark
+
+We also looked at how Spark casts its DataFrames, that supports nullable data types
+into Pandas data frames and back.
+
+```{python}
+import findspark
+findspark.init()
+import pyspark as ps
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+
+s_df = spark.createDataFrame([
+  (None, None, None, None),
+  (True, 1, 0.1, "a"),
+  (False, 2, 0.2, "b")], 
+  ["bool", "int", "num", "char"]
+  )
+s_df
+s_df.head(3)
+```
+
+Now collect into a pandas data frame:
+
+```{python}
+p_df = s_df.toPandas()
+p_df
+p_df.dtypes
+```
+It looks like PySpark is using the same behavior as Arrow (and Polars) which is to
+use objects for booleans and chars, representing the null with Python `None`. Integers
+are converted into floats and then use `NaN` for representing the missing value.
+
+Now going back to spark:
+
+```{python}
+s_df = spark.createDataFrame(p_df)
+s_df
+s_df.head(3)
+```
+
+When going back, the types are simplifed (object -> boolean, object -> string).
+Differently from Arrow, `NaN` are kept and not converted into `None` or the Spark
+`null` value.
+
+Can we use the Pandas's nullable datatypes when casting from Spark? I couldn't
+find it, although you can:
+
+```{python}
+spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
+spark.createDataFrame(s_df.toPandas()).head(3)
+```
+
+And now, you get `None` instead of `NaN`s to represent missing values for integers
+and numeric. Although this is tricky because it would wrongly convert real `NaN`s. into
+nulls.
+
+By setting this feature to `True`, you also get the casts from nullable pandas data types:
+
+```{python}
+spark.createDataFrame(p_df_nullable).head(3)
+```
+
+## Future actions
+
+Given this analysis, I think it make sense to make the following changes to reticulate:
+
+- We should provide an option to use Pandas nullable data types when casting from
+  R to Pandas. And maybe - maybe - this should be the default. Given the current
+  behavior, it seems that this is much safer.
+  
+- We should support casting from Pandas nullable data types to R.
+
+- Similar to how Arrow and Spark works, when converting Pandas `object` columns to R,
+  we should simply their data type if it only contains `None` and another scalar type.
+
+::: {.callout-note collapse="true"}
+## Session Info 
+
+```{r}
+sessionInfo()
+```
+
+
+```{r}
+reticulate::py_config()
+```
+```{python}
+pd.show_versions()
+```
+
+```{python}
+pl.show_versions()
+```
+```{python}
+ps.__version__
+```
+:::
+
+
