@@ -176,7 +176,7 @@ pl_df = pl.DataFrame({
   'num':  [None, 0.1, 0.2],
   'char': [None, "a", "b"],
 })
-pl_df
+print(pl_df)
 ```
 Converting into pandas
 
