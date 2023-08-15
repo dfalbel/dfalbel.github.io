@@ -1,0 +1,87 @@
+---
+title: "Reticulate handling of NA's - 2nd edition"
+author: Daniel Falbel
+date: "2023-08-15"
+---
+
+[In a previous blogpost](https://dfalbel.github.io/posts/reticulate-nas/) we discussed how reticulate handles NA's when converting 
+R data.frame columns into pandas data.frames.
+
+Turns out we missed one important point that came up when implementing [#1439](https://github.com/rstudio/reticulate/pull/1439). When converting R data.frames
+to Pandas data.frames and back, we know that each column is (or at least in most cases)
+supposed to be a Pandas Series (AKA Numpy array) when in Python and a atomic R vector
+in R. Meaning that columns elements are homogeneous, in the sense that all elements
+have the same data type. In Pandas that's not always true, because it's common to represent
+string columns with 'object' data types, that can actually have mixed data types. In R, that's also
+not always true because of list columns. But the point is, we know that we almost surely
+wants to simplify the column to a single data type if that's possible.
+
+However, there's another scenario that reticulate must think about `NA`s. That's the
+case when converting R atomic vectors into Python objects. When outside of the data.frames
+context, reticulate converts R atomic vectors to Python lists. When casting back Python lists
+into R, we simplify that list if it has homogeneous data types into an atomic vector. For example:
+
+```{r}
+library(reticulate)
+x <- r_to_py(1:10)
+x
+py_to_r(x)
+```
+
+Both casting to a Python list and simplifying when back to R are very useful in
+practical situations. Without them, most reticulate codebases would live with a
+bunch of `as.list`, `as.numeric`, `as.character` calls all the time. One could
+argue that this is safer alternative, but it's also too late to change this behavior.
+
+What happens then if the R atomic vector includes NA's?
+
+```{r}
+r_to_py(c(NA, TRUE, FALSE))
+r_to_py(c(NA_integer_, 1:5))
+r_to_py(c(NA_real_, 0.1, 0.2))
+r_to_py(c(NA_character_, "hello", "world"))
+```
+
+Python doesn't have a built-in `NA` value, and reticulate doesn't do anything to
+make sure that R `NA`s are correctly represented in Python. For 3 types of atomic vectors
+reticulate destroys the `NA` information when representing the value in Python, which
+is really unexpected for users - see issue [#197](https://github.com/rstudio/reticulate/issues/197).
+
+One possibility is to replace `NA`s. with `None` in the resulting Python list, so
+for example, we would have:
+
+```r
+r_to_py(c(NA, TRUE, FALSE))
+#> [None, True, False]
+```
+
+IMO this is a good enough alternative. However, it's ambiguous to:
+
+```{r}
+r_to_py(list(NULL, TRUE, FALSE))
+```
+
+And it also breaks `py_to_r` simplification rules, so the round trip would result in:
+
+```r
+x <- r_to_py(c(NA, TRUE, FALSE))
+py_to_r(x)
+
+#> [[1]]
+#> NULL
+#> 
+#> [[2]]
+#> [1] TRUE
+#> 
+#> [[3]]
+#> [1] FALSE
+```
+
+Ok, we could cause this to simplify into a logical vector if we detect it's homegenous
+except for the `None`, but then, what should we do with:
+
+```{r}
+py_run_string("[None, None]") # Should this become a logical vector?
+```
+
+Also are we OK with breaking the round trip casts of `list(NULL, TRUE, FALSE)`?

@@ -134,8 +134,11 @@ dtype_mapping = {
 }
 
 p_df_nullable = at.to_pandas(types_mapper=dtype_mapping.get)
+p_df_nullable
+p_df_nullable.dtypes
 ```
-IN such cases, the round trip cast also works perfectly:
+
+In such cases, the round trip cast also works perfectly:
 
 ```{python}
 pa.Table.from_pandas(p_df_nullable)

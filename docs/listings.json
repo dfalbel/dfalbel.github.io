@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/reticulate-nas2/index.html",
       "/posts/reticulate-nas/index.html",
       "/posts/autorunner/index.html",
       "/posts/mac-mini-headless/index.html"
