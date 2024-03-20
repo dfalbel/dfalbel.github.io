@@ -70,6 +70,34 @@
     "text": "This story is probably not interesting at all and too naive. You should definitely spend your time on something better than reading it but, I decided that I would like to write more in 2023 and so far I already failed for 14 days. So I decided to write it anyway.\nI have a M1 Mac Mini that I use as a self-hosted runner for Github Actions in the torch repository and other repositories in the mlverse organisation that require specific testing for M1 macs, as currently there’s no M1 runners available by default on GitHub.\nThis Mac Mini used to stay in my office in São Paulo, and once I configured it as the CI self hosted runner I never had to connect it again to my monitor, keyboard or mouse to change any setting. Everything was up and running with no problems.\nIn the beginning of this year I temporarily moved from São Paulo to Europe, and I decided to bring the M1 Mac Mini. What if for some reason the internet was down in my office in São Paulo, or a power outage could turn the mini off and there would be no one to turn it back on.\nBack then, I didn’t check but, I thought if would be surely possible to power on the MacMini and connect it to WiFi without a monitor, keyboard and mouse. Perhaps ssh’ing from my Mac, or using a cabel for screen sharing.\nArriving at the first apartment I was going to stay, I powered it on, and started searching online how to remotely connect it to internet. The first thing I found is that since that MacMini had FileVault enabled - it wouldn’t be possible to boot it remotely. It seems that when you boot a FileVault enabled Mac, only a small portion of the OS is actually enabled so you can type your password, but that’s not enough for Remote Screen Sharing or ssh’ing into the mini.\nOK, I was probably naive. So I ran to a local store and bought a mouse. keyboard in that store were specially expensive (20 euros - if you don’t find it expensive, that’s because you are not a Brazilian making currency conversions all the time), and I didn’t want to buy a keyboard that I was going to use only to login into the mac mini. There was a TV in the apartment, I was planing to connect the HDMI cable to the mini, connect the mouse and access some kind of virtual keyboard to type my password and make it boot.\nTo my surprise, enabling the virtual keyboard is not something that you can do from the login menu, unless you have already enabled it the in the accessibility settings in the MacOS settings app. I can change the input language to whatever I want, but impossible to get the virtual keyboard to work.\nThe next day, I moved to another apartment, this one I was going to stay 2 weeks. I was convinced that I would need to buy a keyboard but, the new apartment doesn’t have a TV or monitor, thus probably not worth buying the keyboard…\nI’m moving again the next week and there will be a TV in the new apartment and I’ll probably end up buying a keyboard and everything is going to be solved. But really, it feels very weird needing a monitor, keyboard and mouse in order to be able to use this nice and small computer as a headless server."
   },
   {
+    "objectID": "posts/odbc-macos/index.html",
+    "href": "posts/odbc-macos/index.html",
+    "title": "Configure ODBC drivers to work on MacOS",
+    "section": "",
+    "text": "Installing and configuring ODBC drivers on MacOS so they work nicely with the odbc package is quite challenging.\nI’m not at all experienced in installing those drivers and this is a worked-for-me guide to installing ODBC drivers on MacOS.\nI don’t think I’ll ever update this guide, so here’s my macOS version, in case you come from the future and this is really old blog post.\nMost of what’s in this guide is already in the odbc installation guide, but being only specific to macOS and trying to be a little more specific."
+  },
+  {
+    "objectID": "posts/odbc-macos/index.html#install-unixodbc",
+    "href": "posts/odbc-macos/index.html#install-unixodbc",
+    "title": "Configure ODBC drivers to work on MacOS",
+    "section": "Install unixODBC",
+    "text": "Install unixODBC\nThe UnixODBC driver manager is required for all databases:\n\n## Install the unixODBC library\nbrew install unixodbc"
+  },
+  {
+    "objectID": "posts/odbc-macos/index.html#setup-for-sqlite",
+    "href": "posts/odbc-macos/index.html#setup-for-sqlite",
+    "title": "Configure ODBC drivers to work on MacOS",
+    "section": "Setup for SQLite",
+    "text": "Setup for SQLite\nFor SQLite we install sqliteodbc again from Homebrew:\n\n## SQLite ODBC drivers\nbrew install sqliteodbc\n\nThe sqliteodbc driver doesn’t configure itself automatically with the unixODBC driver manager, so we need to configure unixODBC so it can correctly find the SQLite driver we just installed. Thus you should get an empty data.frame when listing the odbc drivers using:\n\nodbc::odbcListDrivers()\n#> [1] name      attribute value    \n#> <0 rows> (or 0-length row.names)\n\nTo configure ODBC we need to an entry into the odbcinst.ini file. If you have a standard installation of unixODBC, this file is located at '/opt/homebrew/etc/odbcinst.ini'. If that files doesn’t exist, you can find it’s location using the command below on your terminal:\n\nodbcinst -j | grep DRIVERS\n#$ DRIVERS............: /opt/homebrew/etc/odbcinst.ini\n\nOpen the drivers file with:\n\nusethis::edit_file(\"/opt/homebrew/etc/odbcinst.ini\")\n\nYou will add an entry such as:\n[SQLite]\nDriver = /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib\nThe path /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib is the homebrew installation location. This is the result from a default installation, but you can find it using:\n\nbrew info sqliteodbc\n\n\n==> sqliteodbc: stable 0.99991 (bottled)\nODBC driver for SQLite\nhttps://ch-werner.homepage.t-online.de/sqliteodbc/\n/opt/homebrew/Cellar/sqliteodbc/0.99991 (24 files, 892.9KB) *\n  Poured from bottle using the formulae.brew.sh API on 2024-03-20 at 13:27:42\nFrom: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/s/sqliteodbc.rb\nLicense: TCL\n==> Dependencies\nBuild: automake ✘\nRequired: sqlite ✘, unixodbc ✔\n==> Analytics\ninstall: 63 (30 days), 186 (90 days), 850 (365 days)\ninstall-on-request: 63 (30 days), 186 (90 days), 850 (365 days)\nbuild-error: 0 (30 days)\n\nGet the path in the highlighed line and append /lib/libsqlite3odbc.dylib to it.\nRestart your session and you should see:\n\nodbc::odbcListDrivers()\n#     name attribute                                                            value\n# 1 SQLite    Driver /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib\n\nYou can now use this driver with the odbc package:\n\ncon <- odbc::dbConnect(odbc::odbc(), driver = \"SQLite\", database=\":memory:\")"
+  },
+  {
+    "objectID": "posts/odbc-macos/index.html#setup-for-postgresql",
+    "href": "posts/odbc-macos/index.html#setup-for-postgresql",
+    "title": "Configure ODBC drivers to work on MacOS",
+    "section": "Setup for PostgreSQL",
+    "text": "Setup for PostgreSQL\nFor PostgreSQL we install psqlodbc again from Homebrew:\n\nbrew install psqlodbc\n\nOpen the drivers file with:\n\nusethis::edit_file(\"/opt/homebrew/etc/odbcinst.ini\")\n\nYou will add an entry such as:\n[Postgres]\nDriver = /opt/homebrew/Cellar/psqlodbc/16.00.0000/lib/psqlodbcw.so"
+  },
+  {
     "objectID": "posts/reticulate-nas2/index.html",
     "href": "posts/reticulate-nas2/index.html",
     "title": "Reticulate handling of NA’s - 2nd edition",
@@ -81,7 +109,7 @@
     "href": "index.html",
     "title": "blog posts",
     "section": "",
-    "text": "Reticulate handling of NA’s - 2nd edition\n\n\n\n\n\n\n\n\n\n\n\n\nAug 15, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nReticulate handling of NA’s\n\n\n\n\n\n\n\n\n\n\n\n\nJul 26, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nAutoscaling self-hosted runners for GH Actions\n\n\n\n\n\n\n\n\n\n\n\n\nJan 30, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nMac Mini as a headless server\n\n\n\n\n\n\n\n\n\n\n\n\nJan 14, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\nNo matching items"
+    "text": "Configure ODBC drivers to work on MacOS\n\n\n\n\n\n\n\n\n\n\n\n\nMar 20, 2024\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nReticulate handling of NA’s - 2nd edition\n\n\n\n\n\n\n\n\n\n\n\n\nAug 15, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nReticulate handling of NA’s\n\n\n\n\n\n\n\n\n\n\n\n\nJul 26, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nAutoscaling self-hosted runners for GH Actions\n\n\n\n\n\n\n\n\n\n\n\n\nJan 30, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nMac Mini as a headless server\n\n\n\n\n\n\n\n\n\n\n\n\nJan 14, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "about.html",

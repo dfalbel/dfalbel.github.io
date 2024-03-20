@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Daniel Falbel">
-<meta name="dcterms.date" content="2023-08-15">
+<meta name="dcterms.date" content="2024-03-20">
 
-<title>dfalbel - Reticulate handling of NA’s - 2nd edition</title>
+<title>dfalbel - Configure ODBC drivers to work on MacOS</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -104,6 +104,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -174,7 +175,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Reticulate handling of NA’s - 2nd edition</h1>
+<h1 class="title">Configure ODBC drivers to work on MacOS</h1>
 </div>
 
 
@@ -191,7 +192,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 15, 2023</p>
+      <p class="date">March 20, 2024</p>
     </div>
   </div>
   
@@ -201,71 +202,92 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p><a href="https://dfalbel.github.io/posts/reticulate-nas/">In a previous blogpost</a> we discussed how reticulate handles NA’s when converting R data.frame columns into pandas data.frames.</p>
-<p>Turns out we missed one important point that came up when implementing <a href="https://github.com/rstudio/reticulate/pull/1439">#1439</a>. When converting R data.frames to Pandas data.frames and back, we know that each column is (or at least in most cases) supposed to be a Pandas Series (AKA Numpy array) when in Python and a atomic R vector in R. Meaning that columns elements are homogeneous, in the sense that all elements have the same data type. In Pandas that’s not always true, because it’s common to represent string columns with ‘object’ data types, that can actually have mixed data types. In R, that’s also not always true because of list columns. But the point is, we know that we almost surely wants to simplify the column to a single data type if that’s possible.</p>
-<p>However, there’s another scenario that reticulate must think about <code>NA</code>s. That’s the case when converting R atomic vectors into Python objects. When outside of the data.frames context, reticulate converts R atomic vectors to Python lists. When casting back Python lists into R, we simplify that list if it has homogeneous data types into an atomic vector. For example:</p>
+<p>Installing and configuring ODBC drivers on MacOS so they work nicely with the <a href="https://github.com/r-dbi/odbc">odbc</a> package is quite challenging.</p>
+<p>I’m not at all experienced in installing those drivers and this is a worked-for-me guide to installing ODBC drivers on MacOS.</p>
+<p>I don’t think I’ll ever update this guide, so here’s my macOS version, in case you come from the future and this is really old blog post.</p>
+<pre data-code-line-numbers=""><code>14.3.1 (23D60)</code></pre>
+<p>Most of what’s in this guide is already in the <a href="https://odbc.r-dbi.org/articles/setup.html#macos">odbc installation guide</a>, but being only specific to macOS and trying to be a little more specific.</p>
+<section id="install-unixodbc" class="level2">
+<h2 class="anchored" data-anchor-id="install-unixodbc">Install unixODBC</h2>
+<p>The UnixODBC driver manager is required for all databases:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">r_to_py</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]</code></pre>
+<div class="sourceCode cell-code" id="cb2" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">## Install the unixODBC library</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install unixodbc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">py_to_r</span>(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code> [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
-</div>
-</div>
-<p>Both casting to a Python list and simplifying when back to R are very useful in practical situations. Without them, most reticulate codebases would live with a bunch of <code>as.list</code>, <code>as.numeric</code>, <code>as.character</code> calls all the time. One could argue that this is safer alternative, but it’s also too late to change this behavior.</p>
-<p>What happens then if the R atomic vector includes NA’s?</p>
+</section>
+<section id="setup-for-sqlite" class="level2">
+<h2 class="anchored" data-anchor-id="setup-for-sqlite">Setup for SQLite</h2>
+<p>For SQLite we install <code>sqliteodbc</code> again from Homebrew:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[True, True, False]</code></pre>
+<div class="sourceCode cell-code" id="cb3" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">## SQLite ODBC drivers</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install sqliteodbc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA_integer_</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[-2147483648, 1, 2, 3, 4, 5]</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA_real_</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[nan, 0.1, 0.2]</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA_character_</span>, <span class="st">"hello"</span>, <span class="st">"world"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>['NA', 'hello', 'world']</code></pre>
-</div>
-</div>
-<p>Python doesn’t have a built-in <code>NA</code> value, and reticulate doesn’t do anything to make sure that R <code>NA</code>s are correctly represented in Python. For 3 types of atomic vectors reticulate destroys the <code>NA</code> information when representing the value in Python, which is really unexpected for users - see issue <a href="https://github.com/rstudio/reticulate/issues/197">#197</a>.</p>
-<p>One possibility is to replace <code>NA</code>s. with <code>None</code> in the resulting Python list, so for example, we would have:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [None, True, False]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>IMO this is a good enough alternative. However, it’s ambiguous to:</p>
+<p>The sqliteodbc driver doesn’t configure itself automatically with the unixODBC driver manager, so we need to configure unixODBC so it can correctly find the SQLite driver we just installed. Thus you should get an empty data.frame when listing the odbc drivers using:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[None, True, False]</code></pre>
+<div class="sourceCode cell-code" id="cb4" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">odbcListDrivers</span>()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] name      attribute value    </span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>And it also breaks <code>py_to_r</code> simplification rules, so the round trip would result in:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">py_to_r</span>(x)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Ok, we could cause this to simplify into a logical vector if we detect it’s homegenous except for the <code>None</code>, but then, what should we do with:</p>
+<p>To configure ODBC we need to an entry into the <code>odbcinst.ini</code> file. If you have a standard installation of unixODBC, this file is located at <code>'/opt/homebrew/etc/odbcinst.ini'</code>. If that files doesn’t exist, you can find it’s location using the command below on your terminal:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">py_run_string</span>(<span class="st">"[None, None]"</span>) <span class="co"># Should this become a logical vector?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">odbcinst</span> <span class="at">-j</span> <span class="kw">|</span> <span class="fu">grep</span> DRIVERS</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#$ DRIVERS............: /opt/homebrew/etc/odbcinst.ini</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Also are we OK with breaking the round trip casts of <code>list(NULL, TRUE, FALSE)</code>?</p>
+<p>Open the drivers file with:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">edit_file</span>(<span class="st">"/opt/homebrew/etc/odbcinst.ini"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You will add an entry such as:</p>
+<pre data-code-line-numbers=""><code>[SQLite]
+Driver = /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib</code></pre>
+<p>The path <code>/opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib</code> is the homebrew installation location. This is the result from a default installation, but you can find it using:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> info sqliteodbc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-source-line-numbers="4">
+<div class="sourceCode cell-code" id="cb9" data-source-line-numbers="4" data-code-line-numbers="4"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">==</span><span class="op">&gt;</span> sqliteodbc: stable 0.99991 <span class="er">(</span><span class="ex">bottled</span><span class="kw">)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ODBC</span> driver for SQLite</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">https://ch-werner.homepage.t-online.de/sqliteodbc/</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">/opt/homebrew/Cellar/sqliteodbc/0.99991</span> <span class="er">(</span><span class="ex">24</span> files, 892.9KB<span class="kw">)</span> <span class="ex">*</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Poured</span> from bottle using the formulae.brew.sh API on 2024-03-20 at 13:27:42</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">From:</span> https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/s/sqliteodbc.rb</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ex">License:</span> TCL</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">==</span><span class="op">&gt;</span> Dependencies</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">Build:</span> automake ✘</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ex">Required:</span> sqlite ✘, unixodbc ✔</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="ex">==</span><span class="op">&gt;</span> Analytics</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="ex">install:</span> 63 <span class="er">(</span><span class="ex">30</span> days<span class="kw">)</span><span class="ex">,</span> 186 <span class="er">(</span><span class="ex">90</span> days<span class="kw">)</span><span class="ex">,</span> 850 <span class="er">(</span><span class="ex">365</span> days<span class="kw">)</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="ex">install-on-request:</span> 63 <span class="er">(</span><span class="ex">30</span> days<span class="kw">)</span><span class="ex">,</span> 186 <span class="er">(</span><span class="ex">90</span> days<span class="kw">)</span><span class="ex">,</span> 850 <span class="er">(</span><span class="ex">365</span> days<span class="kw">)</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="ex">build-error:</span> 0 <span class="er">(</span><span class="ex">30</span> days<span class="kw">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Get the path in the highlighed line and append <code>/lib/libsqlite3odbc.dylib</code> to it.</p>
+<p>Restart your session and you should see:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">odbcListDrivers</span>()</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#     name attribute                                                            value</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 SQLite    Driver /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can now use this driver with the odbc package:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> odbc<span class="sc">::</span><span class="fu">dbConnect</span>(odbc<span class="sc">::</span><span class="fu">odbc</span>(), <span class="at">driver =</span> <span class="st">"SQLite"</span>, <span class="at">database=</span><span class="st">":memory:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="setup-for-postgresql" class="level2">
+<h2 class="anchored" data-anchor-id="setup-for-postgresql">Setup for PostgreSQL</h2>
+<p>For PostgreSQL we install <code>psqlodbc</code> again from Homebrew:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install psqlodbc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Open the drivers file with:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">edit_file</span>(<span class="st">"/opt/homebrew/etc/odbcinst.ini"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You will add an entry such as:</p>
+<pre data-code-line-numbers=""><code>[Postgres]
+Driver = /opt/homebrew/Cellar/psqlodbc/16.00.0000/lib/psqlodbcw.so</code></pre>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -407,4 +429,5 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 
 
 
+<script src="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.js" defer="true"></script>
 </body></html>

@@ -1,0 +1,143 @@
+---
+title: "Configure ODBC drivers to work on MacOS"
+author: Daniel Falbel
+date: "2024-03-20"
+filters:
+  - line-highlight
+---
+
+Installing and configuring ODBC drivers on MacOS so they work nicely with
+the [odbc](https://github.com/r-dbi/odbc) package is quite challenging.
+
+I'm not at all experienced in installing those drivers and this is a worked-for-me
+guide to installing ODBC drivers on MacOS.
+
+I don't think I'll ever update this guide, so here's my macOS version, in case
+you come from the future and this is really old blog post.
+
+```
+14.3.1 (23D60)
+```
+
+Most of what's in this guide is already in the [odbc installation guide](https://odbc.r-dbi.org/articles/setup.html#macos), but being only specific
+to macOS and trying to be a little more specific.
+
+## Install unixODBC
+
+The UnixODBC driver manager is required for all databases:
+
+```{sh, eval=FALSE}
+## Install the unixODBC library
+brew install unixodbc
+```
+
+## Setup for SQLite
+
+For SQLite we install `sqliteodbc` again from Homebrew:
+
+```{sh, eval=FALSE}
+## SQLite ODBC drivers
+brew install sqliteodbc
+```
+
+The sqliteodbc driver doesn't configure itself automatically with the unixODBC
+driver manager, so we need to configure unixODBC so it can correctly find the
+SQLite driver we just installed. Thus you should get an empty data.frame when
+listing the odbc drivers using:
+
+```{r, eval = FALSE}
+odbc::odbcListDrivers()
+#> [1] name      attribute value    
+#> <0 rows> (or 0-length row.names)
+```
+To configure ODBC we need to an entry into the `odbcinst.ini` file. If you have 
+a standard installation of unixODBC, this file is located at `'/opt/homebrew/etc/odbcinst.ini'`.
+If that files doesn't exist, you can find it's location using the command below
+on your terminal:
+
+```{sh, eval=FALSE}
+odbcinst -j | grep DRIVERS
+#$ DRIVERS............: /opt/homebrew/etc/odbcinst.ini
+```
+
+Open the drivers file with:
+
+```{r, eval = FALSE}
+usethis::edit_file("/opt/homebrew/etc/odbcinst.ini")
+```
+
+You will add an entry such as:
+
+```
+[SQLite]
+Driver = /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib
+```
+
+The path `/opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib` is the
+homebrew installation location. This is the result from a default installation,
+but you can find it using:
+
+```{sh, eval=-FALSE}
+brew info sqliteodbc
+```
+
+```{sh, eval=FALSE}
+#| source-line-numbers: "4"
+==> sqliteodbc: stable 0.99991 (bottled)
+ODBC driver for SQLite
+https://ch-werner.homepage.t-online.de/sqliteodbc/
+/opt/homebrew/Cellar/sqliteodbc/0.99991 (24 files, 892.9KB) *
+  Poured from bottle using the formulae.brew.sh API on 2024-03-20 at 13:27:42
+From: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/s/sqliteodbc.rb
+License: TCL
+==> Dependencies
+Build: automake ✘
+Required: sqlite ✘, unixodbc ✔
+==> Analytics
+install: 63 (30 days), 186 (90 days), 850 (365 days)
+install-on-request: 63 (30 days), 186 (90 days), 850 (365 days)
+build-error: 0 (30 days)
+```
+
+Get the path in the highlighed line and append `/lib/libsqlite3odbc.dylib` to it.
+
+Restart your session and you should see:
+
+```{r, eval=FALSE}
+odbc::odbcListDrivers()
+#     name attribute                                                            value
+# 1 SQLite    Driver /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib
+```
+
+You can now use this driver with the odbc package:
+
+```{r}
+con <- odbc::dbConnect(odbc::odbc(), driver = "SQLite", database=":memory:")
+```
+
+## Setup for PostgreSQL
+
+For PostgreSQL we install `psqlodbc` again from Homebrew:
+
+```{sh, eval=FALSE}
+brew install psqlodbc
+```
+
+Open the drivers file with:
+
+```{r, eval = FALSE}
+usethis::edit_file("/opt/homebrew/etc/odbcinst.ini")
+```
+
+You will add an entry such as:
+
+```
+[Postgres]
+Driver = /opt/homebrew/Cellar/psqlodbc/16.00.0000/lib/psqlodbcw.so
+```
+
+The restart your session and connect to a local Postgres database with:
+
+```{r, eval=FALSE}
+con <- odbc::dbConnect(odbc::odbc(), driver = "Postgres", database="test")
+```
