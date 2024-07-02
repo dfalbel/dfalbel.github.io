@@ -98,6 +98,13 @@
     "text": "Setup for PostgreSQL\nFor PostgreSQL we install psqlodbc again from Homebrew:\n\nbrew install psqlodbc\n\nOpen the drivers file with:\n\nusethis::edit_file(\"/opt/homebrew/etc/odbcinst.ini\")\n\nYou will add an entry such as:\n[Postgres]\nDriver = /opt/homebrew/Cellar/psqlodbc/16.00.0000/lib/psqlodbcw.so"
   },
   {
+    "objectID": "posts/torch-colab/index.html",
+    "href": "posts/torch-colab/index.html",
+    "title": "You can use torch on Google Colab notebooks",
+    "section": "",
+    "text": "You can use torch on Google Colab notebooks. Here’s how you do it.\nCreate an R notebook using the link https://colab.research.google.com/notebook#create=true&language=r.\nChange your runtime type, if tyou want GPU support by clicking Runtime -> Change runtime type and selecting GPU as the hardware accelerator.\nPaste the following into a new cell and run it. This installs torch from pre-built binaries which are:\n\nMuch faster to install since you don’t need to compile the torch C++ codebase from source.\nThe pre-built binaries bundle all the necessary CUDA libraries, so you don’t need to figure out if Colab installs a compatible version of CUDA.\n\noptions(timeout = 600) # increasing timeout is recommended since we will be downloading a 2GB file.\nkind <- \"cu118\"\nversion <- available.packages()[\"torch\",\"Version\"]\noptions(repos = c(\n  torch = sprintf(\"https://torch-cdn.mlverse.org/packages/%s/%s/\", kind, version),\n  CRAN = \"https://cloud.r-project.org\" # or any other from which you want to install the other R dependencies.\n))\ninstall.package(\"torch\")\nUse the notebook with GPU support!"
+  },
+  {
     "objectID": "posts/reticulate-nas2/index.html",
     "href": "posts/reticulate-nas2/index.html",
     "title": "Reticulate handling of NA’s - 2nd edition",
@@ -109,7 +116,7 @@
     "href": "index.html",
     "title": "blog posts",
     "section": "",
-    "text": "Configure ODBC drivers to work on MacOS\n\n\n\n\n\n\n\n\n\n\n\n\nMar 20, 2024\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nReticulate handling of NA’s - 2nd edition\n\n\n\n\n\n\n\n\n\n\n\n\nAug 15, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nReticulate handling of NA’s\n\n\n\n\n\n\n\n\n\n\n\n\nJul 26, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nAutoscaling self-hosted runners for GH Actions\n\n\n\n\n\n\n\n\n\n\n\n\nJan 30, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\nMac Mini as a headless server\n\n\n\n\n\n\n\n\n\n\n\n\nJan 14, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\nNo matching items"
+    "text": "You can use torch on Google Colab notebooks\n\n\n\n\n\n\n\n\n\n\n\n\nJul 2, 2024\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nConfigure ODBC drivers to work on MacOS\n\n\n\n\n\n\n\n\n\n\n\n\nMar 20, 2024\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nReticulate handling of NA’s - 2nd edition\n\n\n\n\n\n\n\n\n\n\n\n\nAug 15, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nReticulate handling of NA’s\n\n\n\n\n\n\n\n\n\n\n\n\nJul 26, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAutoscaling self-hosted runners for GH Actions\n\n\n\n\n\n\n\n\n\n\n\n\nJan 30, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMac Mini as a headless server\n\n\n\n\n\n\n\n\n\n\n\n\nJan 14, 2023\n\n\nDaniel Falbel\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "about.html",

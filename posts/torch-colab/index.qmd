@@ -1,0 +1,33 @@
+---
+title: "You can use torch on Google Colab notebooks"
+author: Daniel Falbel
+date: "2024-07-02"
+---
+
+You can use torch on Google Colab notebooks. Here's how you do it.
+
+Create an R notebook using the link [https://colab.research.google.com/notebook#create=true&language=r](https://colab.research.google.com/notebook#create=true&language=r).
+
+Change your runtime type, if tyou want GPU support by clicking `Runtime` -> `Change runtime type` and selecting `GPU` as the hardware accelerator.
+
+Paste the following into a new cell and run it. This installs torch from pre-built binaries which are:
+
+1. Much faster to install since you don't need to compile the torch C++ codebase from source.
+2. The pre-built binaries bundle all the necessary CUDA libraries, so you don't need to figure out
+   if Colab installs a compatible version of CUDA.
+
+```{.r}
+options(timeout = 600) # increasing timeout is recommended since we will be downloading a 2GB file.
+kind <- "cu118"
+version <- available.packages()["torch","Version"]
+options(repos = c(
+  torch = sprintf("https://torch-cdn.mlverse.org/packages/%s/%s/", kind, version),
+  CRAN = "https://cloud.r-project.org" # or any other from which you want to install the other R dependencies.
+))
+install.package("torch")
+```
+
+Use the notebook with GPU support!
+
+![](colab.png)
+
