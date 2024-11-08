@@ -11,6 +11,8 @@ website:
         href: https://github.com/dfalbel
       - icon: twitter
         href: https://twitter.com/dfalbel
+  draft-mode: unlinked
+
 format:
   html:
     theme: cosmo

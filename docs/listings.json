@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/static-dynamic/index.html",
       "/posts/torch-colab/index.html",
       "/posts/odbc-macos/index.html",
       "/posts/reticulate-nas2/index.html",

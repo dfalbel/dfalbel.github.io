@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Daniel Falbel">
-<meta name="dcterms.date" content="2023-08-15">
+<meta name="dcterms.date" content="2024-11-08">
 
-<title>Reticulate handling of NA’s - 2nd edition – dfalbel</title>
+<title>Undertanding dynamic and static libraries symbol conflicts – dfalbel</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -155,7 +155,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Reticulate handling of NA’s - 2nd edition</h1>
+<h1 class="title">Undertanding dynamic and static libraries symbol conflicts</h1>
 </div>
 
 
@@ -172,7 +172,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 15, 2023</p>
+      <p class="date">November 8, 2024</p>
     </div>
   </div>
   
@@ -184,71 +184,123 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p><a href="https://dfalbel.github.io/posts/reticulate-nas/">In a previous blogpost</a> we discussed how reticulate handles NA’s when converting R data.frame columns into pandas data.frames.</p>
-<p>Turns out we missed one important point that came up when implementing <a href="https://github.com/rstudio/reticulate/pull/1439">#1439</a>. When converting R data.frames to Pandas data.frames and back, we know that each column is (or at least in most cases) supposed to be a Pandas Series (AKA Numpy array) when in Python and a atomic R vector in R. Meaning that columns elements are homogeneous, in the sense that all elements have the same data type. In Pandas that’s not always true, because it’s common to represent string columns with ‘object’ data types, that can actually have mixed data types. In R, that’s also not always true because of list columns. But the point is, we know that we almost surely wants to simplify the column to a single data type if that’s possible.</p>
-<p>However, there’s another scenario that reticulate must think about <code>NA</code>s. That’s the case when converting R atomic vectors into Python objects. When outside of the data.frames context, reticulate converts R atomic vectors to Python lists. When casting back Python lists into R, we simplify that list if it has homogeneous data types into an atomic vector. For example:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">r_to_py</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]</code></pre>
+<p>Like most posts in this blog, I wrote this one to help me understand a topic better. They might be wrong or incomplete, so please let me know if you find any mistakes. I might have completely misunderstood too.</p>
+<p>Here’s the problem I wanted to investigate:</p>
+<p>LibTorch (the C++ library behind the <a href="https://github.com/mlverse/torch">torch</a>) is compiled and distributed as a shared library by the PyTorch team. The official Linux x64_86 distributions are statically linked against Intel MKL - a high-performance BLAS alternative. This can be verified by looking at the symbols in the library and noticing that we have mkl_blas symbols there.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">venv</span><span class="kw">)</span> <span class="ex">rstudio@3a53a82b44f1:~/data/torch/build-lantern/libtorch$</span> nm lib/libtorch_cpu.so <span class="kw">|</span> <span class="fu">grep</span> mkl_blas <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">0000000017d2e660</span> B .gomp_critical_user_mkl_blas_cgemm_omp_acopy_la_cs</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">0000000017d2e658</span> B .gomp_critical_user_mkl_blas_dgemm_omp_acopy_la_cs</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">0000000017d2e648</span> B .gomp_critical_user_mkl_blas_sgemm_omp_acopy_la_cs</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">0000000017d2e650</span> B .gomp_critical_user_mkl_blas_zgemm_omp_acopy_la_cs</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">000000000a1f1f60</span> T mkl_blas_avx2_cgemm_api_support</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">000000000a1dc080</span> T mkl_blas_avx2_cgemm_blk_info_bdz</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">000000000e662600</span> T mkl_blas_avx2_cgemm_cccopy_down2_ea</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">000000000e65ee00</span> T mkl_blas_avx2_cgemm_cccopy_right12_ea</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">000000000c70e800</span> T mkl_blas_avx2_cgemm_ccopy_down12_ea</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">000000000c70dc00</span> T mkl_blas_avx2_cgemm_ccopy_down2_ea</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The official distributions of R, though, are dynamically linked against the reference BLAS for those platforms. <code>sessionInfo()</code> reports the BLAS library that R is using.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">sessionInfo</span>()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>R version <span class="dv">4</span>.<span class="fl">4.1</span> (<span class="dv">2024-06-14</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Platform<span class="sc">:</span> x86_64<span class="sc">-</span>pc<span class="sc">-</span>linux<span class="sc">-</span>gnu</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Running under<span class="sc">:</span> Ubuntu <span class="dv">22</span>.<span class="fl">04.3</span> LTS</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>Matrix products<span class="sc">:</span> default</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>BLAS<span class="sc">:</span>   <span class="er">/</span>usr<span class="sc">/</span>lib<span class="sc">/</span>x86_64<span class="sc">-</span>linux<span class="sc">-</span>gnu<span class="sc">/</span>openblas<span class="sc">-</span>pthread<span class="sc">/</span>libblas.so<span class="fl">.3</span> </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>LAPACK<span class="sc">:</span> <span class="er">/</span>usr<span class="sc">/</span>lib<span class="sc">/</span>x86_64<span class="sc">-</span>linux<span class="sc">-</span>gnu<span class="sc">/</span>openblas<span class="sc">-</span>pthread<span class="sc">/</span>libopenblasp<span class="sc">-</span>r0.<span class="dv">3</span>.<span class="fl">20.</span>so;  LAPACK version <span class="dv">3</span>.<span class="fl">10.0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This means that when we load the torch package in R, we have two BLAS libraries loaded in memory: the reference BLAS and the MKL BLAS. Now, which one will be used when we multiply tensors in torch?</p>
+<p>The order of initialization is:</p>
+<ol type="1">
+<li>R is initialized and loads the reference BLAS</li>
+<li>We load the torch package, which loads the libTorch shared library, which has the MKL BLAS symbols</li>
+</ol>
+<p>I’d expect that LibTorch calls would continue to use their statically linked MKL BLAS symbols and R calls would continue to use the reference BLAS. But that’s not what really happens.</p>
+<p>Given this problem, it’s easier to understand what happens if we take R, LibTorch and BLAS out of the equation and create a simple example with two shared libraries that have the same symbol and are loaded in the same process in the order that we described above.</p>
+<section id="simple-experiment" class="level2">
+<h2 class="anchored" data-anchor-id="simple-experiment">Simple experiment</h2>
+<p>So I built the following experiment:</p>
+<ol type="1">
+<li>Create static library <code>libA</code> that implements <code>print()</code> (representing MKL BLAS).</li>
+<li>Create shared library <code>libB</code> that links statically to <code>libA</code> and calls <code>print()</code> (represents LibTorch).</li>
+<li>Create shared library <code>libAShared</code> that implements <code>print()</code> (represents the reference BLAS).</li>
+<li>Created an executable that is links to <code>libAShared</code> dynamically and that loads B dynamically at runtime too. (representing R)</li>
+</ol>
+<p>I won’t go into too much details about the code. Essentially we build <code>libA</code>, <code>libB</code> and <code>libAShared</code> with cmake definitions as below:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>libs/CMakeLists.txt</strong></pre>
 </div>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">py_to_r</span>(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code> [1]  1  2  3  4  5  6  7  8  9 10</code></pre>
+<div class="sourceCode" id="cb3" data-filename="libs/CMakeLists.txt"><pre class="sourceCode cmake code-with-copy"><code class="sourceCode cmake"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">add_library</span>(<span class="bn">A</span> <span class="ot">STATIC</span> libA.cpp)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">add_library</span>(<span class="bn">AShared</span> libAShared.cpp)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">add_library</span>(<span class="bn">B</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">target_sources</span>(<span class="bn">B</span> <span class="ot">PUBLIC</span> libB.cpp)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">target_link_libraries</span>(<span class="bn">B</span> <span class="ot">PUBLIC</span> A)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Then codes for <code>libA</code>, <code>libB</code> and <code>libAShared</code> are very simples:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// libs/libA.cpp</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">extern</span> <span class="st">"C"</span> <span class="dt">void</span> print<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Hello from libA!"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">// libs/libB.cpp</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">extern</span> <span class="st">"C"</span> <span class="dt">void</span> print<span class="op">();</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">// only needed so the linker really includes the function</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">// print() from the statically linked libA.</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">extern</span> <span class="st">"C"</span> <span class="dt">void</span> print2 <span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    print<span class="op">();</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">// libs/libAShared.cpp</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="at">extern</span> <span class="st">"C"</span> <span class="dt">void</span> libprint<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Hello from libAShared!"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The executable is built with the following cmake code:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>CMakeLists.txt</strong></pre>
 </div>
-<p>Both casting to a Python list and simplifying when back to R are very useful in practical situations. Without them, most reticulate codebases would live with a bunch of <code>as.list</code>, <code>as.numeric</code>, <code>as.character</code> calls all the time. One could argue that this is safer alternative, but it’s also too late to change this behavior.</p>
-<p>What happens then if the R atomic vector includes NA’s?</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[True, True, False]</code></pre>
+<div class="sourceCode" id="cb5" data-filename="CMakeLists.txt"><pre class="sourceCode cmake code-with-copy"><code class="sourceCode cmake"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">cmake_minimum_required</span>(<span class="ot">VERSION</span> <span class="dt">3.10</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">project</span>(TwoLibs)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Option to build shared or static libraries</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">option</span>(<span class="dv">BUILD_SHARED_LIBS</span> <span class="st">"Build shared libraries"</span> <span class="ot">ON</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Add subdirectories</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">add_subdirectory</span>(libs)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">add_executable</span>(<span class="bn">binary</span> main.cpp)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="kw">target_link_libraries</span>(<span class="bn">binary</span> AShared)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA_integer_</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[-2147483648, 1, 2, 3, 4, 5]</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA_real_</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[nan, 0.1, 0.2]</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA_character_</span>, <span class="st">"hello"</span>, <span class="st">"world"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>['NA', 'hello', 'world']</code></pre>
-</div>
-</div>
-<p>Python doesn’t have a built-in <code>NA</code> value, and reticulate doesn’t do anything to make sure that R <code>NA</code>s are correctly represented in Python. For 3 types of atomic vectors reticulate destroys the <code>NA</code> information when representing the value in Python, which is really unexpected for users - see issue <a href="https://github.com/rstudio/reticulate/issues/197">#197</a>.</p>
-<p>One possibility is to replace <code>NA</code>s. with <code>None</code> in the resulting Python list, so for example, we would have:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [None, True, False]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>IMO this is a good enough alternative. However, it’s ambiguous to:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">r_to_py</span>(<span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[None, True, False]</code></pre>
-</div>
-</div>
-<p>And it also breaks <code>py_to_r</code> simplification rules, so the round trip would result in:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">r_to_py</span>(<span class="fu">c</span>(<span class="cn">NA</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">py_to_r</span>(x)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; NULL</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Ok, we could cause this to simplify into a logical vector if we detect it’s homegenous except for the <code>None</code>, but then, what should we do with:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">py_run_string</span>(<span class="st">"[None, None]"</span>) <span class="co"># Should this become a logical vector?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Also are we OK with breaking the round trip casts of <code>list(NULL, TRUE, FALSE)</code>?</p>
+<p>And its code is:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;dlfcn.h&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">extern</span> <span class="st">"C"</span> <span class="dt">void</span> print<span class="op">();</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> <span class="op">*</span>handle <span class="op">=</span> dlopen<span class="op">(</span><span class="st">"libs/libB.dylib"</span><span class="op">,</span> RTLD_FIRST<span class="op">);</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typedef</span> <span class="dt">void</span> <span class="op">(*</span><span class="dt">print_t</span><span class="op">)();</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">print_t</span> b_print <span class="op">=</span> <span class="op">(</span><span class="dt">print_t</span><span class="op">)</span>dlsym<span class="op">(</span>handle<span class="op">,</span> <span class="st">"print"</span><span class="op">);</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Calling print() from libB.dylib"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    b_print<span class="op">();</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Calling print() from main"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    print<span class="op">();</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Compiled this and … The expected happened; Ie the globally defined <code>print</code> is the one from <code>libAShared</code> since the library is dyn loaded with the binary executable. When calling <code>print2</code> from <code>libB</code> - which itself calls <code>print</code>, the <code>print</code> from the statically linked <code>libA</code> is called.</p>
+<pre><code>Calling print() from libB.dylib
+Hello from libA!
+Calling print() from main
+Hello from libAShared!</code></pre>
+<p>So what’s special about torch and R? Well I don’t know yet :S</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

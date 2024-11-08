@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Daniel Falbel">
+<meta name="dcterms.date" content="2024-03-20">
 
-<title>blog posts – dfalbel</title>
+<title>Hacking your Strava fitness-fatigue graph – dfalbel</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,27 +22,60 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,77 +103,20 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
+<meta name="quarto:status" content="draft">
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">dfalbel</span>
     </a>
   </div>
@@ -149,7 +127,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -170,242 +148,127 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">blog posts</h1>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(7)</span></div></div></div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Hacking your Strava fitness-fatigue graph</h1>
+</div>
 
 
 
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Daniel Falbel </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 20, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
 
 
+</header>
 
 
+<section id="getting-data" class="level2">
+<h2 class="anchored" data-anchor-id="getting-data">Getting data</h2>
+<p>The UnixODBC driver manager is required for all databases:</p>
+</section>
+<section id="setup-for-sqlite" class="level2">
+<h2 class="anchored" data-anchor-id="setup-for-sqlite">Setup for SQLite</h2>
+<p>For SQLite we install <code>sqliteodbc</code> again from Homebrew:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">## SQLite ODBC drivers</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install sqliteodbc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The sqliteodbc driver doesn’t configure itself automatically with the unixODBC driver manager, so we need to configure unixODBC so it can correctly find the SQLite driver we just installed. Thus you should get an empty data.frame when listing the odbc drivers using:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">odbcListDrivers</span>()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] name      attribute value    </span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To configure ODBC we need to an entry into the <code>odbcinst.ini</code> file. If you have a standard installation of unixODBC, this file is located at <code>'/opt/homebrew/etc/odbcinst.ini'</code>. If that files doesn’t exist, you can find it’s location using the command below on your terminal:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">odbcinst</span> <span class="at">-j</span> <span class="kw">|</span> <span class="fu">grep</span> DRIVERS</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#$ DRIVERS............: /opt/homebrew/etc/odbcinst.ini</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Open the drivers file with:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">edit_file</span>(<span class="st">"/opt/homebrew/etc/odbcinst.ini"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You will add an entry such as:</p>
+<pre data-code-line-numbers=""><code>[SQLite]
+Driver = /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib</code></pre>
+<p>The path <code>/opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib</code> is the homebrew installation location. This is the result from a default installation, but you can find it using:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> info sqliteodbc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-source-line-numbers="4">
+<div class="sourceCode cell-code" id="cb7" data-source-line-numbers="4" data-code-line-numbers="4"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">==</span><span class="op">&gt;</span> sqliteodbc: stable 0.99991 <span class="er">(</span><span class="ex">bottled</span><span class="kw">)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ODBC</span> driver for SQLite</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">https://ch-werner.homepage.t-online.de/sqliteodbc/</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">/opt/homebrew/Cellar/sqliteodbc/0.99991</span> <span class="er">(</span><span class="ex">24</span> files, 892.9KB<span class="kw">)</span> <span class="ex">*</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Poured</span> from bottle using the formulae.brew.sh API on 2024-03-20 at 13:27:42</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">From:</span> https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/s/sqliteodbc.rb</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="ex">License:</span> TCL</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">==</span><span class="op">&gt;</span> Dependencies</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">Build:</span> automake ✘</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="ex">Required:</span> sqlite ✘, unixodbc ✔</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">==</span><span class="op">&gt;</span> Analytics</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="ex">install:</span> 63 <span class="er">(</span><span class="ex">30</span> days<span class="kw">)</span><span class="ex">,</span> 186 <span class="er">(</span><span class="ex">90</span> days<span class="kw">)</span><span class="ex">,</span> 850 <span class="er">(</span><span class="ex">365</span> days<span class="kw">)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="ex">install-on-request:</span> 63 <span class="er">(</span><span class="ex">30</span> days<span class="kw">)</span><span class="ex">,</span> 186 <span class="er">(</span><span class="ex">90</span> days<span class="kw">)</span><span class="ex">,</span> 850 <span class="er">(</span><span class="ex">365</span> days<span class="kw">)</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="ex">build-error:</span> 0 <span class="er">(</span><span class="ex">30</span> days<span class="kw">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Get the path in the highlighed line and append <code>/lib/libsqlite3odbc.dylib</code> to it.</p>
+<p>Restart your session and you should see:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">odbcListDrivers</span>()</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#     name attribute                                                            value</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 SQLite    Driver /opt/homebrew/Cellar/sqliteodbc/0.99991/lib/libsqlite3odbc.dylib</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can now use this driver with the odbc package:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> odbc<span class="sc">::</span><span class="fu">dbConnect</span>(odbc<span class="sc">::</span><span class="fu">odbc</span>(), <span class="at">driver =</span> <span class="st">"SQLite"</span>, <span class="at">database=</span><span class="st">":memory:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="setup-for-postgresql" class="level2">
+<h2 class="anchored" data-anchor-id="setup-for-postgresql">Setup for PostgreSQL</h2>
+<p>For PostgreSQL we install <code>psqlodbc</code> again from Homebrew:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install psqlodbc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Open the drivers file with:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">edit_file</span>(<span class="st">"/opt/homebrew/etc/odbcinst.ini"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You will add an entry such as:</p>
+<pre data-code-line-numbers=""><code>[Postgres]
+Driver = /opt/homebrew/Cellar/psqlodbc/16.00.0000/lib/psqlodbcw.so</code></pre>
+<p>The restart your session and connect to a local Postgres database with:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13" data-source-line-numbers="nil" data-code-line-numbers="nil"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> odbc<span class="sc">::</span><span class="fu">dbConnect</span>(odbc<span class="sc">::</span><span class="fu">odbc</span>(), <span class="at">driver =</span> <span class="st">"Postgres"</span>, <span class="at">database=</span><span class="st">"test"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-date-sort="1731034800000" data-listing-file-modified-sort="1731096268429" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="616">
-<div class="thumbnail">
-<p><a href="./posts/static-dynamic/index.html" class="no-external"></a></p><a href="./posts/static-dynamic/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/static-dynamic/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/static-dynamic/index.html" class="no-external">Undertanding dynamic and static libraries symbol conflicts</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/static-dynamic/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/static-dynamic/index.html" class="no-external">Like most posts in this blog, I wrote this one to help me understand a topic better. They might be wrong or incomplete, so please let me know if you find any mistakes. I…</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/static-dynamic/index.html" class="no-external">
-<div class="listing-date">
-Nov 8, 2024
-</div>
-<div class="listing-author">
-Daniel Falbel
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-date-sort="1719889200000" data-listing-file-modified-sort="1719927787485" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="151">
-<div class="thumbnail">
-<p><a href="./posts/torch-colab/index.html" class="no-external"></a></p><a href="./posts/torch-colab/index.html" class="no-external">
-<p class="card-img-top"><img src="posts/torch-colab/colab.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/torch-colab/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/torch-colab/index.html" class="no-external">You can use torch on Google Colab notebooks</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/torch-colab/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/torch-colab/index.html" class="no-external">You can use torch on Google Colab notebooks. Here’s how you do it.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/torch-colab/index.html" class="no-external">
-<div class="listing-date">
-Jul 2, 2024
-</div>
-<div class="listing-author">
-Daniel Falbel
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-date-sort="1710903600000" data-listing-file-modified-sort="1710953978067" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="470">
-<div class="thumbnail">
-<p><a href="./posts/odbc-macos/index.html" class="no-external"></a></p><a href="./posts/odbc-macos/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/odbc-macos/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/odbc-macos/index.html" class="no-external">Configure ODBC drivers to work on MacOS</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/odbc-macos/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/odbc-macos/index.html" class="no-external">Installing and configuring ODBC drivers on MacOS so they work nicely with the odbc package is quite challenging.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/odbc-macos/index.html" class="no-external">
-<div class="listing-date">
-Mar 20, 2024
-</div>
-<div class="listing-author">
-Daniel Falbel
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-listing-date-sort="1692068400000" data-listing-file-modified-sort="1692122272073" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="412">
-<div class="thumbnail">
-<p><a href="./posts/reticulate-nas2/index.html" class="no-external"></a></p><a href="./posts/reticulate-nas2/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/reticulate-nas2/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/reticulate-nas2/index.html" class="no-external">Reticulate handling of NA’s - 2nd edition</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/reticulate-nas2/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/reticulate-nas2/index.html" class="no-external">In a previous blogpost we discussed how reticulate handles NA’s when converting R data.frame columns into pandas data.frames.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/reticulate-nas2/index.html" class="no-external">
-<div class="listing-date">
-Aug 15, 2023
-</div>
-<div class="listing-author">
-Daniel Falbel
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-listing-date-sort="1690340400000" data-listing-file-modified-sort="1690393317598" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1027">
-<div class="thumbnail">
-<p><a href="./posts/reticulate-nas/index.html" class="no-external"></a></p><a href="./posts/reticulate-nas/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/reticulate-nas/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/reticulate-nas/index.html" class="no-external">Reticulate handling of NA’s</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/reticulate-nas/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/reticulate-nas/index.html" class="no-external">There’s room for improving how reticulate handles missing values when converting between R and Python (pandas) data.frames. This documents highlights the current behavior…</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/reticulate-nas/index.html" class="no-external">
-<div class="listing-date">
-Jul 26, 2023
-</div>
-<div class="listing-author">
-Daniel Falbel
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="5" data-listing-date-sort="1675047600000" data-listing-file-modified-sort="1675090254531" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1697">
-<div class="thumbnail">
-<p><a href="./posts/autorunner/index.html" class="no-external"></a></p><a href="./posts/autorunner/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/autorunner/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/autorunner/index.html" class="no-external">Autoscaling self-hosted runners for GH Actions</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/autorunner/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/autorunner/index.html" class="no-external">This blogpost describes a service called ‘autorunner’ that’s now used in the mlverse organization to auto-scale self-hosted runners for GitHub actions.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/autorunner/index.html" class="no-external">
-<div class="listing-date">
-Jan 30, 2023
-</div>
-<div class="listing-author">
-Daniel Falbel
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="6" data-listing-date-sort="1673665200000" data-listing-file-modified-sort="1673737891735" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="579">
-<div class="thumbnail">
-<p><a href="./posts/mac-mini-headless/index.html" class="no-external"></a></p><a href="./posts/mac-mini-headless/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/mac-mini-headless/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/mac-mini-headless/index.html" class="no-external">Mac Mini as a headless server</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/mac-mini-headless/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/mac-mini-headless/index.html" class="no-external">This story is probably not interesting at all and too naive. You should definitely spend your time on something better than reading it but, I decided that I would like to…</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/mac-mini-headless/index.html" class="no-external">
-<div class="listing-date">
-Jan 14, 2023
-</div>
-<div class="listing-author">
-Daniel Falbel
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -826,9 +689,14 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
+<script src="https://giscus.app/client.js" data-repo="dfalbel/dfalbel.github.io" data-repo-id="MDEwOlJlcG9zaXRvcnkzNDY5NTcxNw==" data-category="General" data-category-id="DIC_kwDOAhFqJc4CT6aq" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="light" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="light">
+<input type="hidden" id="giscus-alt-theme" value="dark">
 </div> <!-- /content -->
 
 
 
 
+<script src="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.js" defer="true"></script>
 </body></html>

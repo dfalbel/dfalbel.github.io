@@ -1,0 +1,170 @@
+---
+title: "Undertanding dynamic and static libraries symbol conflicts"
+author: Daniel Falbel
+date: "2024-11-08"
+---
+
+Like most posts in this blog, I wrote this one to help me understand a topic better.
+They might be wrong or incomplete, so please let me know if you find any mistakes.
+I might have completely misunderstood too.
+
+Here's the problem I wanted to investigate:
+
+LibTorch (the C++ library behind the [torch](https://github.com/mlverse/torch)) is compiled and
+distributed as a shared library by the PyTorch team. The official Linux x64_86 distributions
+are statically linked against Intel MKL - a high-performance BLAS alternative. This can be verified by
+looking at the symbols in the library and noticing that we have mkl_blas symbols there.
+
+```bash
+(venv) rstudio@3a53a82b44f1:~/data/torch/build-lantern/libtorch$ nm lib/libtorch_cpu.so | grep mkl_blas | head
+0000000017d2e660 B .gomp_critical_user_mkl_blas_cgemm_omp_acopy_la_cs
+0000000017d2e658 B .gomp_critical_user_mkl_blas_dgemm_omp_acopy_la_cs
+0000000017d2e648 B .gomp_critical_user_mkl_blas_sgemm_omp_acopy_la_cs
+0000000017d2e650 B .gomp_critical_user_mkl_blas_zgemm_omp_acopy_la_cs
+000000000a1f1f60 T mkl_blas_avx2_cgemm_api_support
+000000000a1dc080 T mkl_blas_avx2_cgemm_blk_info_bdz
+000000000e662600 T mkl_blas_avx2_cgemm_cccopy_down2_ea
+000000000e65ee00 T mkl_blas_avx2_cgemm_cccopy_right12_ea
+000000000c70e800 T mkl_blas_avx2_cgemm_ccopy_down12_ea
+000000000c70dc00 T mkl_blas_avx2_cgemm_ccopy_down2_ea
+```
+
+The official distributions of R, though, are dynamically linked against the reference BLAS for those
+platforms. `sessionInfo()` reports the BLAS library that R is using.
+
+```r
+> sessionInfo()
+R version 4.4.1 (2024-06-14)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 22.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
+```
+
+This means that when we load the torch package in R, we have two BLAS libraries loaded in
+memory: the reference BLAS and the MKL BLAS. 
+Now, which one will be used when we multiply tensors in torch?
+
+The order of initialization is:
+
+1. R is initialized and loads the reference BLAS
+2. We load the torch package, which loads the libTorch shared library, which has the MKL BLAS symbols
+
+I'd expect that LibTorch calls would continue to use their statically linked MKL BLAS symbols and
+R calls would continue to use the reference BLAS. But that's not what really happens.
+
+Given this problem, it's easier to understand what happens if we take R, LibTorch and BLAS out of
+the equation and create a simple example with two shared libraries that have the same symbol and
+are loaded in the same process in the order that we described above.
+
+## Simple experiment
+
+So I built the following experiment:
+
+1. Create static library `libA` that implements `print()` (representing MKL BLAS).
+2. Create shared library `libB` that links statically to `libA` and calls `print()` (represents LibTorch).
+3. Create shared library `libAShared` that implements `print()` (represents the reference BLAS).
+4. Created an executable that is links to `libAShared` dynamically and that loads B dynamically at runtime too. (representing R)
+
+I won't go into too much details about the code. Essentially we build `libA`, `libB` and `libAShared` with
+cmake definitions as below:
+
+```{.cmake filename="libs/CMakeLists.txt"}
+add_library(A STATIC libA.cpp)
+add_library(AShared libAShared.cpp)
+
+add_library(B)
+target_sources(B PUBLIC libB.cpp)
+target_link_libraries(B PUBLIC A)
+```
+
+Then codes for `libA`, `libB` and `libAShared` are
+very simples:
+
+```{.cpp}
+// libs/libA.cpp
+#include <iostream>
+
+extern "C" void print() {
+    std::cout << "Hello from libA!" << std::endl;
+}
+
+// libs/libB.cpp
+extern "C" void print();
+// only needed so the linker really includes the function
+// print() from the statically linked libA.
+extern "C" void print2 () {
+    print();
+}
+
+// libs/libAShared.cpp
+#include <iostream>
+
+extern "C" void libprint() {
+    std::cout << "Hello from libAShared!" << std::endl;
+}
+```
+
+The executable is built with the following cmake code:
+
+```{.cmake filename="CMakeLists.txt"}
+cmake_minimum_required(VERSION 3.10)
+project(TwoLibs)
+
+# Option to build shared or static libraries
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+
+# Add subdirectories
+add_subdirectory(libs)
+add_executable(binary main.cpp)
+target_link_libraries(binary AShared)
+```
+
+And its code is:
+
+```{.cpp}
+#include <dlfcn.h>
+#include <iostream>
+
+extern "C" void print();
+
+int main() {
+    void *handle = dlopen("libs/libB.dylib", RTLD_FIRST);
+    
+    typedef void (*print_t)();
+    print_t b_print = (print_t)dlsym(handle, "print");
+
+    std::cout << "Calling print() from libB.dylib" << std::endl;
+    b_print();
+
+    std::cout << "Calling print() from main" << std::endl;
+    print();
+}
+```
+
+Compiled this and ... The expected happened; Ie the globally defined `print` is the one from
+`libAShared` since the library is dyn loaded with the binary executable. 
+When calling `print2` from `libB` - which itself calls `print`, the `print` from the statically linked `libA` is called.
+
+```
+Calling print() from libB.dylib
+Hello from libA!
+Calling print() from main
+Hello from libAShared!
+```
+
+So what's special about torch and R? Well I don't know yet :S
+
+
+
+
+
+
+
+
+
+
+
+
