@@ -1,0 +1,47 @@
+---
+title: "R overrides your DYLD_FALLBACK_LIBRARY_PATH"
+author: Daniel Falbel
+date: "2025-09-25"
+---
+
+While adding **embedding atlas support** to [**ragnar**](https://github.com/tidyverse/ragnar), we needed to call into Python code via **reticulate**, including functions from **Numba** and **llvmlite**. Running this code directly from Python worked fine, but when executed inside **RStudio** or from the R terminal, imports of `llvmlite` failed with errors like:
+
+```
+OSError: dlopen(…/lib/python3.11/site-packages/llvmlite/binding/libllvmlite.dylib, 0x0006): 
+Library not loaded: @rpath/libz.1.dylib
+Referenced from: <013C5840-E0C8-3F9D-B219-1AFABD90298A> …/lib/python3.11/
+site-packages/llvmlite/binding/libllvmlite.dylib
+Reason: tried: …/R.framework/Versions/4.5-arm64/Resources/lib/libz.1.dylib (no such file),
+ …/JavaVirtualMachines/jdk-11.0.18+10/Contents/Home/lib/server/libz.1.dylib (no such file), 
+…/R.framework/Versions/4.5-arm64/Resources/lib/libz.1.dylib (no such file), 
+…/JavaVirtualMachines/jdk-11.0.18+10/Contents/Home/lib/server/libz.1.dylib (no such file), 
+…/rstudio-fallback-library-path-2001957168/libz.1.dylib (no such file)
+```
+
+Running the same workflow inside **Positron**, does not produce this error. 
+
+## Why it happens
+
+Recent **Numba** and **llvmlite** macOS wheels (e.g., **Numba 0.60.x**, **llvmlite 0.43.x**) ship binaries that reference system libraries like `libz` and `libc++` using `@rpath`, such as `@rpath/libz.1.dylib`.  
+
+On macOS, `dyld` normally resolves these references using a fallback search path that includes `/usr/lib` by default. The default value for `DYLD_FALLBACK_LIBRARY_PATH` is:
+
+```
+$HOME/lib:/usr/local/lib:/usr/lib
+```
+
+However, the R CLI and RStudio both override `DYLD_FALLBACK_LIBRARY_PATH` to a custom value that **excludes** `/usr/lib`. For example, for me, RStudio sets it to:
+
+```
+/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib:
+/Library/Java/JavaVirtualMachines/jdk-11.0.18+10/Contents/Home/lib/server:
+/var/folders/wx/w206psq54v7bwkb809nt6s5m0000gp/T/rstudio-fallback-library-path-1457248296
+```
+
+This replacement **removes the default system paths**, so `dyld` can no longer find `libz` or `libc++` when resolving `@rpath` references.  
+
+As a result, importing `llvmlite` fails when running under R or RStudio, even though it works when using the same Python environment directly.
+
+It didn't happen with Positron because it leaves `DYLD_FALLBACK_LIBRARY_PATH` untouched, so macOS’s default fallback search remains in place and the system libraries are resolved correctly.
+
+Turns out this was a known issue in Numba/ llvmlite and was already fixed in the release candidate versions, so simply updating to the latest versions should resolve the see [llmvlite#1290](https://github.com/numba/llvmlite/issues/1290).
