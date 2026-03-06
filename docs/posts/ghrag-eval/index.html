@@ -258,7 +258,7 @@ verbatim — rephrase it naturally.</code></pre>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
-<p>I ran both tasks as an eval set using Claude Sonnet 4.6 on 100 samples:</p>
+<p>I ran both tasks as an eval set on 100 samples, using Claude Sonnet 4.6 as the model that receives the search query and decides how to use the tool:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run inspect eval-set evals/positron/task_gh.py evals/positron/task_store.py <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--model</span> bedrock/us.anthropic.claude-sonnet-4-6 <span class="dt">\</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--log-dir</span> logs-positron-3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -290,6 +290,7 @@ verbatim — rephrase it naturally.</code></pre>
 </tbody>
 </table>
 <p>The vector store retrieval is both more accurate (95% vs 85%) and significantly faster (9 min vs 32 min). It also uses about 2.7x fewer tokens.</p>
+<p>A caveat: the reported standard errors are computed from a single run assuming independent samples, but in practice the results are quite variable across runs – much more than the stderr would suggest. The same eval set run multiple times can swing by several percentage points, likely due to non-determinism in the model’s tool-calling behavior (e.g.&nbsp;how it reformulates the query, whether it retries with a different search). The relative ranking between the two approaches has been consistent across runs though.</p>
 <p>The speed difference makes sense – the GitHub API task has to deal with HTTP requests and rate limiting (the tool includes retry logic with backoff for rate limit errors), while the vector store query is entirely local.</p>
 <p>The accuracy difference is more interesting. GitHub’s search is keyword-based and scoped to the full text of issues, which can surface noisy results for vague queries. The vector store uses semantic embeddings, so it can match on meaning rather than exact terms. For queries like “Python interpreter not found for sessions”, semantic search can surface related issues even if they use different wording.</p>
 </section>
