@@ -1,0 +1,128 @@
+---
+title: "Evaluating ghrag: GitHub issue retrieval with Inspect AI"
+author: Daniel Falbel
+date: "2026-03-06"
+---
+
+[ghrag](https://github.com/dfalbel/ghrag) is a RAG tool for GitHub issues and pull requests,
+built on top of [raghilda](https://github.com/dfalbel/raghilda) (a lightweight library for
+vector store management and document chunking).
+It syncs a repository's issues/PRs into a local vector store (DuckDB-backed, with OpenAI embeddings),
+then lets you query them through a CLI, an interactive chat, or an MCP server. The idea is
+that you can point it at a large repo and quickly find the issue you're looking for
+using natural language queries.
+
+But does it actually work? And more importantly, does the local vector store do better than
+just searching the GitHub API directly? To answer that, I built an evaluation suite using
+[Inspect AI](https://inspect.aisi.org.uk/) and ran it against the
+[posit-dev/positron](https://github.com/posit-dev/positron) repository (~11k issues and PRs).
+
+## Generating the evaluation dataset
+
+The eval dataset needs to contain pairs of (search query, expected issue number). The tricky
+part is generating realistic search queries -- they should sound like something a developer
+would actually type, not just a copy of the issue title.
+
+The generation script works like this:
+
+1. Load the full issue cache from `~/.ghrag/posit-dev/positron/issues.jsonl` (populated by
+   `ghrag sync`).
+2. Randomly sample N issues (I did two rounds of 50 with `--seed 42` for a total of 100).
+3. For each sampled issue, send its title and body (truncated to 2000 chars) to Claude Opus
+   and ask it to generate a short 5-6 word search query.
+
+The prompt is designed to produce natural queries:
+
+```
+Write a very short (5-6 words) search query that a developer would
+type into a search box when looking for this issue. Imagine a user
+who knows the general context but doesn't know exactly how the issue
+is framed. Do NOT mention the issue number. Do NOT quote the title
+verbatim — rephrase it naturally.
+```
+
+This gives you samples like:
+
+| Query | Target | Title |
+|-------|--------|-------|
+| detect dev ark before bundled fallback | #2163 | Detect dev ark before falling back to bundled ark |
+| prompt renderer ignores active chat mode | #10777 | Use active chat mode for prompt renderer when invoked via API |
+| Python interpreter not found for sessions | #11473 | Python Installation not found for Sessions, Quarto, but py-File executable |
+
+Some targets accept multiple valid answers (e.g. when duplicate issues exist).
+
+### Cleaning up the dataset
+
+After generating the initial dataset, I ran the GitHub API search task and manually reviewed
+the errors. Several "wrong" answers turned out to be cases where the model found a
+legitimate duplicate or closely related issue that wasn't listed as a valid target. For
+example, a query about "Python interpreter not found" could reasonably match multiple issues
+reporting the same problem. I went through the failures, checked whether the model's answer
+was actually a valid match, and updated those samples to accept multiple target numbers.
+This kind of iterative refinement is important -- without it, the eval would penalize
+the model for being right in a way you didn't anticipate.
+
+## The two eval tasks
+
+Both tasks use the same structure: give the model a search query and a single tool, then check
+if it identifies the correct issue number. The scorer is a simple exact `match()` on the
+issue number.
+
+**Task 1: GitHub API search** (`task_gh.py`) -- The model gets a `gh_search_issues` tool
+that calls the GitHub search API via PyGithub, scoped to `repo:posit-dev/positron`, returning
+the top 20 results as JSON (number, title, URL, state, labels).
+
+**Task 2: Vector store retrieval** (`task_store.py`) -- The model gets a `retrieve` tool
+that queries ghrag's local DuckDB vector store using semantic similarity search, also
+returning top 20 results.
+
+Both tasks use the same system message and solver pipeline:
+
+```python
+solver=[
+    system_message(SYSTEM_MESSAGE),
+    use_tools([the_search_tool()]),
+    generate(),
+],
+scorer=match(),
+```
+
+The model can call the tool multiple times (the generate step loops until the model stops
+calling tools), then it must respond with just the issue number.
+
+## Results
+
+I ran both tasks as an eval set using Claude Sonnet 4.6 on 100 samples:
+
+```bash
+uv run inspect eval-set evals/positron/task_gh.py evals/positron/task_store.py \
+  --model bedrock/us.anthropic.claude-sonnet-4-6 \
+  --log-dir logs-positron-3
+```
+
+| Task | Accuracy | Stderr | Duration | Tokens |
+|------|----------|--------|----------|--------|
+| GitHub API search | 85% | ±3.6% | ~32 min | 4.9M |
+| Vector store (ghrag) | **95%** | ±2.2% | ~9 min | 1.8M |
+
+The vector store retrieval is both more accurate (95% vs 85%) and significantly faster
+(9 min vs 32 min). It also uses about 2.7x fewer tokens.
+
+The speed difference makes sense -- the GitHub API task has to deal with HTTP requests
+and rate limiting (the tool includes retry logic with backoff for rate limit errors),
+while the vector store query is entirely local.
+
+The accuracy difference is more interesting. GitHub's search is keyword-based and
+scoped to the full text of issues, which can surface noisy results for vague queries.
+The vector store uses semantic embeddings, so it can match on meaning rather than
+exact terms. For queries like "Python interpreter not found for sessions", semantic
+search can surface related issues even if they use different wording.
+
+## Takeaways
+
+- A local vector store with semantic search meaningfully outperforms GitHub's built-in
+  search for this kind of "find the right issue" task, both in accuracy and speed.
+- Using an LLM to generate evaluation queries is a practical way to build realistic
+  test sets without manually writing hundreds of queries.
+- Inspect AI makes it straightforward to compare tool-augmented approaches side by side --
+  the only difference between the two tasks is which tool is provided to the model.

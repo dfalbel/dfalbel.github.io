@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/ghrag-eval/index.html",
       "/posts/dyld-fallback-path/index.html",
       "/posts/static-dynamic/index.html",
       "/posts/torch-colab/index.html",

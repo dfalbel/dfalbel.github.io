@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Daniel Falbel">
-<meta name="dcterms.date" content="2024-07-02">
+<meta name="dcterms.date" content="2026-03-06">
 
-<title>You can use torch on Google Colab notebooks – dfalbel</title>
+<title>Evaluating ghrag: GitHub issue retrieval with Inspect AI – dfalbel</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -158,7 +158,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">You can use torch on Google Colab notebooks</h1>
+<h1 class="title">Evaluating ghrag: GitHub issue retrieval with Inspect AI</h1>
 </div>
 
 
@@ -175,7 +175,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 2, 2024</p>
+      <p class="date">March 6, 2026</p>
     </div>
   </div>
   
@@ -187,26 +187,122 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>You can use torch on Google Colab notebooks. Here’s how you do it.</p>
-<p>Create an R notebook using the link <a href="https://colab.research.google.com/notebook#create=true&amp;language=r">https://colab.research.google.com/notebook#create=true&amp;language=r</a>.</p>
-<p>Change your runtime type, if tyou want GPU support by clicking <code>Runtime</code> -&gt; <code>Change runtime type</code> and selecting <code>GPU</code> as the hardware accelerator.</p>
-<p>Paste the following into a new cell and run it. This installs torch from pre-built binaries which are:</p>
+<p><a href="https://github.com/dfalbel/ghrag">ghrag</a> is a RAG tool for GitHub issues and pull requests, built on top of <a href="https://github.com/dfalbel/raghilda">raghilda</a> (a lightweight library for vector store management and document chunking). It syncs a repository’s issues/PRs into a local vector store (DuckDB-backed, with OpenAI embeddings), then lets you query them through a CLI, an interactive chat, or an MCP server. The idea is that you can point it at a large repo and quickly find the issue you’re looking for using natural language queries.</p>
+<p>But does it actually work? And more importantly, does the local vector store do better than just searching the GitHub API directly? To answer that, I built an evaluation suite using <a href="https://inspect.aisi.org.uk/">Inspect AI</a> and ran it against the <a href="https://github.com/posit-dev/positron">posit-dev/positron</a> repository (~11k issues and PRs).</p>
+<section id="generating-the-evaluation-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="generating-the-evaluation-dataset">Generating the evaluation dataset</h2>
+<p>The eval dataset needs to contain pairs of (search query, expected issue number). The tricky part is generating realistic search queries – they should sound like something a developer would actually type, not just a copy of the issue title.</p>
+<p>The generation script works like this:</p>
 <ol type="1">
-<li>Much faster to install since you don’t need to compile the torch C++ codebase from source.</li>
-<li>The pre-built binaries bundle all the necessary CUDA libraries, so you don’t need to figure out if Colab installs a compatible version of CUDA.</li>
+<li>Load the full issue cache from <code>~/.ghrag/posit-dev/positron/issues.jsonl</code> (populated by <code>ghrag sync</code>).</li>
+<li>Randomly sample N issues (I did two rounds of 50 with <code>--seed 42</code> for a total of 100).</li>
+<li>For each sampled issue, send its title and body (truncated to 2000 chars) to Claude Opus and ask it to generate a short 5-6 word search query.</li>
 </ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>) <span class="co"># increasing timeout is recommended since we will be downloading a 2GB file.</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>kind <span class="ot">&lt;-</span> <span class="st">"cu118"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>version <span class="ot">&lt;-</span> <span class="fu">available.packages</span>()[<span class="st">"torch"</span>,<span class="st">"Version"</span>]</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">repos =</span> <span class="fu">c</span>(</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">torch =</span> <span class="fu">sprintf</span>(<span class="st">"https://torch-cdn.mlverse.org/packages/%s/%s/"</span>, kind, version),</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">CRAN =</span> <span class="st">"https://cloud.r-project.org"</span> <span class="co"># or any other from which you want to install the other R dependencies.</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">install.package</span>(<span class="st">"torch"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Use the notebook with GPU support!</p>
-<p><img src="colab.png" class="img-fluid"></p>
+<p>The prompt is designed to produce natural queries:</p>
+<pre><code>Write a very short (5-6 words) search query that a developer would
+type into a search box when looking for this issue. Imagine a user
+who knows the general context but doesn't know exactly how the issue
+is framed. Do NOT mention the issue number. Do NOT quote the title
+verbatim — rephrase it naturally.</code></pre>
+<p>This gives you samples like:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 36%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Query</th>
+<th>Target</th>
+<th>Title</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>detect dev ark before bundled fallback</td>
+<td>#2163</td>
+<td>Detect dev ark before falling back to bundled ark</td>
+</tr>
+<tr class="even">
+<td>prompt renderer ignores active chat mode</td>
+<td>#10777</td>
+<td>Use active chat mode for prompt renderer when invoked via API</td>
+</tr>
+<tr class="odd">
+<td>Python interpreter not found for sessions</td>
+<td>#11473</td>
+<td>Python Installation not found for Sessions, Quarto, but py-File executable</td>
+</tr>
+</tbody>
+</table>
+<p>Some targets accept multiple valid answers (e.g.&nbsp;when duplicate issues exist).</p>
+<section id="cleaning-up-the-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="cleaning-up-the-dataset">Cleaning up the dataset</h3>
+<p>After generating the initial dataset, I ran the GitHub API search task and manually reviewed the errors. Several “wrong” answers turned out to be cases where the model found a legitimate duplicate or closely related issue that wasn’t listed as a valid target. For example, a query about “Python interpreter not found” could reasonably match multiple issues reporting the same problem. I went through the failures, checked whether the model’s answer was actually a valid match, and updated those samples to accept multiple target numbers. This kind of iterative refinement is important – without it, the eval would penalize the model for being right in a way you didn’t anticipate.</p>
+</section>
+</section>
+<section id="the-two-eval-tasks" class="level2">
+<h2 class="anchored" data-anchor-id="the-two-eval-tasks">The two eval tasks</h2>
+<p>Both tasks use the same structure: give the model a search query and a single tool, then check if it identifies the correct issue number. The scorer is a simple exact <code>match()</code> on the issue number.</p>
+<p><strong>Task 1: GitHub API search</strong> (<code>task_gh.py</code>) – The model gets a <code>gh_search_issues</code> tool that calls the GitHub search API via PyGithub, scoped to <code>repo:posit-dev/positron</code>, returning the top 20 results as JSON (number, title, URL, state, labels).</p>
+<p><strong>Task 2: Vector store retrieval</strong> (<code>task_store.py</code>) – The model gets a <code>retrieve</code> tool that queries ghrag’s local DuckDB vector store using semantic similarity search, also returning top 20 results.</p>
+<p>Both tasks use the same system message and solver pipeline:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>solver<span class="op">=</span>[</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    system_message(SYSTEM_MESSAGE),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    use_tools([the_search_tool()]),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    generate(),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>],</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>scorer<span class="op">=</span>match(),</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The model can call the tool multiple times (the generate step loops until the model stops calling tools), then it must respond with just the issue number.</p>
+</section>
+<section id="results" class="level2">
+<h2 class="anchored" data-anchor-id="results">Results</h2>
+<p>I ran both tasks as an eval set using Claude Sonnet 4.6 on 100 samples:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run inspect eval-set evals/positron/task_gh.py evals/positron/task_store.py <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--model</span> bedrock/us.anthropic.claude-sonnet-4-6 <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--log-dir</span> logs-positron-3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Task</th>
+<th>Accuracy</th>
+<th>Stderr</th>
+<th>Duration</th>
+<th>Tokens</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GitHub API search</td>
+<td>85%</td>
+<td>±3.6%</td>
+<td>~32 min</td>
+<td>4.9M</td>
+</tr>
+<tr class="even">
+<td>Vector store (ghrag)</td>
+<td><strong>95%</strong></td>
+<td>±2.2%</td>
+<td>~9 min</td>
+<td>1.8M</td>
+</tr>
+</tbody>
+</table>
+<p>The vector store retrieval is both more accurate (95% vs 85%) and significantly faster (9 min vs 32 min). It also uses about 2.7x fewer tokens.</p>
+<p>The speed difference makes sense – the GitHub API task has to deal with HTTP requests and rate limiting (the tool includes retry logic with backoff for rate limit errors), while the vector store query is entirely local.</p>
+<p>The accuracy difference is more interesting. GitHub’s search is keyword-based and scoped to the full text of issues, which can surface noisy results for vague queries. The vector store uses semantic embeddings, so it can match on meaning rather than exact terms. For queries like “Python interpreter not found for sessions”, semantic search can surface related issues even if they use different wording.</p>
+</section>
+<section id="takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="takeaways">Takeaways</h2>
+<ul>
+<li>A local vector store with semantic search meaningfully outperforms GitHub’s built-in search for this kind of “find the right issue” task, both in accuracy and speed.</li>
+<li>Using an LLM to generate evaluation queries is a practical way to build realistic test sets without manually writing hundreds of queries.</li>
+<li>Inspect AI makes it straightforward to compare tool-augmented approaches side by side – the only difference between the two tasks is which tool is provided to the model.</li>
+</ul>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
