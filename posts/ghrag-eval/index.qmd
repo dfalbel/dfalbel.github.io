@@ -92,7 +92,8 @@ calling tools), then it must respond with just the issue number.
 
 ## Results
 
-I ran both tasks as an eval set using Claude Sonnet 4.6 on 100 samples:
+I ran both tasks as an eval set on 100 samples, using Claude Sonnet 4.6 as the model
+that receives the search query and decides how to use the tool:
 
 ```bash
 uv run inspect eval-set evals/positron/task_gh.py evals/positron/task_store.py \
@@ -107,6 +108,14 @@ uv run inspect eval-set evals/positron/task_gh.py evals/positron/task_store.py \
 
 The vector store retrieval is both more accurate (95% vs 85%) and significantly faster
 (9 min vs 32 min). It also uses about 2.7x fewer tokens.
+
+A caveat: the reported standard errors are computed from a single run assuming
+independent samples, but in practice the results are quite variable across runs --
+much more than the stderr would suggest. The same eval set run multiple times can
+swing by several percentage points, likely due to non-determinism in the model's
+tool-calling behavior (e.g. how it reformulates the query, whether it retries with
+a different search). The relative ranking between the two approaches has been
+consistent across runs though.
 
 The speed difference makes sense -- the GitHub API task has to deal with HTTP requests
 and rate limiting (the tool includes retry logic with backoff for rate limit errors),
